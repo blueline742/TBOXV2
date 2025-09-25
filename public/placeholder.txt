@@ -1,0 +1,11 @@
+Place your PNG card textures here:
+- wizard.png
+- robot.png
+- dragon.png
+- knight.png
+- ninja.png
+- healer.png
+- pirate.png
+- alien.png
+
+Cards will work with placeholder gradients if images are not provided.
