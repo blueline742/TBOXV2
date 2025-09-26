@@ -6,47 +6,51 @@ import { fireVertexShader, fireFragmentShader } from '@/shaders/fireShader'
 
 interface EffectProps {
   type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison'
-  position: [number, number, number]
-  targetPositions?: [number, number, number][]
+  position: [number, number, number] // Source card position
+  targetPosition?: [number, number, number] // Target card position
   duration?: number
   onComplete?: () => void
 }
 
-export function SpellEffect({ type, position, targetPositions = [], duration = 2, onComplete }: EffectProps) {
+export function SpellEffect({ type, position, targetPosition, duration = 1.5, onComplete }: EffectProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null)
-  const startTime = useRef(Date.now())
+  const startTime = useRef<number | null>(null)
+  const lightRef = useRef<THREE.PointLight>(null)
 
-  const particleCount = type === 'freeze' ? 100 : type === 'fire' ? 80 : 50
+  // Set start time on mount
+  useEffect(() => {
+    startTime.current = Date.now()
+    console.log('[SPELL EFFECT] Created at:', startTime.current, { type, position, targetPosition })
+  }, [])
 
-  const { positions, velocities } = useMemo(() => {
+  const particleCount = type === 'fire' ? 100 : type === 'freeze' ? 100 : 50
+
+  const { initialPositions } = useMemo(() => {
     const pos = new Float32Array(particleCount * 3)
-    const vel = new Float32Array(particleCount * 3)
 
     for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3
-      if (type === 'freeze' || type === 'fire') {
+      if (type === 'fire') {
+        const angle = (Math.PI * 2 * i) / particleCount
+        const radius = Math.random() * 0.1 // Tight burst
+        pos[i3] = position[0] + Math.cos(angle) * radius
+        pos[i3 + 1] = position[1] + 0.5 // Exact card height
+        pos[i3 + 2] = position[2] + Math.sin(angle) * radius
+      } else if (type === 'freeze') {
         const angle = (Math.PI * 2 * i) / particleCount
         const radius = Math.random() * 2
         pos[i3] = Math.cos(angle) * radius
         pos[i3 + 1] = Math.random() * 2
         pos[i3 + 2] = Math.sin(angle) * radius
-
-        vel[i3] = (Math.random() - 0.5) * 0.02
-        vel[i3 + 1] = Math.random() * 0.05
-        vel[i3 + 2] = (Math.random() - 0.5) * 0.02
       } else {
         pos[i3] = (Math.random() - 0.5) * 2
         pos[i3 + 1] = Math.random() * 2
         pos[i3 + 2] = (Math.random() - 0.5) * 2
-
-        vel[i3] = (Math.random() - 0.5) * 0.05
-        vel[i3 + 1] = Math.random() * 0.1
-        vel[i3 + 2] = (Math.random() - 0.5) * 0.05
       }
     }
 
-    return { positions: pos, velocities: vel }
-  }, [type, particleCount])
+    return { initialPositions: pos }
+  }, [type, particleCount, position, targetPosition])
 
   const shaderMaterial = useMemo(() => {
     if (type === 'freeze') {
@@ -65,13 +69,11 @@ export function SpellEffect({ type, position, targetPositions = [], duration = 2
       return new THREE.ShaderMaterial({
         vertexShader: fireVertexShader,
         fragmentShader: fireFragmentShader,
+        uniforms: { time: { value: 0 }, opacity: { value: 1 } },
         transparent: true,
-        blending: THREE.AdditiveBlending,
         depthWrite: false,
-        uniforms: {
-          time: { value: 0 },
-          opacity: { value: 1 }
-        }
+        depthTest: false, // Allow drawing over table
+        blending: THREE.AdditiveBlending,
       })
     } else {
       return new THREE.MeshBasicMaterial({
@@ -86,13 +88,16 @@ export function SpellEffect({ type, position, targetPositions = [], duration = 2
   }, [type])
 
   useFrame(() => {
-    if (!meshRef.current) return
+    if (!meshRef.current || startTime.current === null) return
 
     const elapsed = (Date.now() - startTime.current) / 1000
-    const progress = elapsed / duration
+    const progress = Math.min(elapsed / duration, 1.0)
 
     if (progress >= 1) {
-      if (onComplete) onComplete()
+      if (onComplete) {
+        console.log('[EFFECT DEBUG] Fire effect complete after', elapsed, 'seconds')
+        onComplete()
+      }
       return
     }
 
@@ -101,14 +106,43 @@ export function SpellEffect({ type, position, targetPositions = [], duration = 2
     for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3
 
-      dummy.position.set(
-        positions[i3] + velocities[i3] * elapsed * 10,
-        positions[i3 + 1] + velocities[i3 + 1] * elapsed * 10,
-        positions[i3 + 2] + velocities[i3 + 2] * elapsed * 10
-      )
+      if (type === 'fire') {
+        if (targetPosition) {
+          // Pure lerp from source to target
+          const startPos = new THREE.Vector3(initialPositions[i3], initialPositions[i3 + 1], initialPositions[i3 + 2])
+          const targetVec = new THREE.Vector3(...targetPosition)
+          targetVec.y += 0.5 // Match target card height
+          const finalPos = startPos.clone().lerp(targetVec, progress)
 
-      const scale = 1 - progress * 0.5
-      dummy.scale.set(scale, scale, scale)
+          // Minimal arc (slight upward mid-way)
+          finalPos.y += Math.sin(progress * Math.PI) * 0.2 // Reduced peak
+
+          dummy.position.copy(finalPos)
+
+          // Slight spread for fireball look
+          dummy.position.x += (Math.random() - 0.5) * 0.1 * (1 - progress)
+          dummy.position.z += (Math.random() - 0.5) * 0.1 * (1 - progress)
+        } else {
+          // Fallback if no target - just expand outward
+          dummy.position.set(
+            initialPositions[i3] + (Math.random() - 0.5) * elapsed * 2,
+            initialPositions[i3 + 1] + elapsed * 0.5,
+            initialPositions[i3 + 2] + (Math.random() - 0.5) * elapsed * 2
+          )
+        }
+
+        const scale = 1.2 - progress * 0.4 // Start bigger, shrink to point
+        dummy.scale.set(scale, scale, scale)
+      } else {
+        dummy.position.set(
+          initialPositions[i3] + (Math.random() - 0.5) * elapsed * 2,
+          initialPositions[i3 + 1] + elapsed * 2,
+          initialPositions[i3 + 2] + (Math.random() - 0.5) * elapsed * 2
+        )
+
+        const scale = 1 - progress * 0.5
+        dummy.scale.set(scale, scale, scale)
+      }
 
       dummy.updateMatrix()
       meshRef.current.setMatrixAt(i, dummy.matrix)
@@ -120,6 +154,11 @@ export function SpellEffect({ type, position, targetPositions = [], duration = 2
       shaderMaterial.uniforms.time.value = elapsed
       shaderMaterial.uniforms.opacity.value = 1 - progress
     }
+
+    // Animate point light for fire effect
+    if (type === 'fire' && lightRef.current) {
+      lightRef.current.intensity = Math.sin(progress * Math.PI) * 5
+    }
   })
 
   useEffect(() => {
@@ -129,21 +168,31 @@ export function SpellEffect({ type, position, targetPositions = [], duration = 2
   }, [shaderMaterial])
 
   return (
-    <group position={position}>
-      <instancedMesh ref={meshRef} args={[undefined, undefined, particleCount]}>
-        <sphereGeometry args={[0.05, 8, 8]} />
-        {shaderMaterial}
+    <group>
+      <instancedMesh ref={meshRef} args={[undefined, undefined, particleCount]} material={shaderMaterial}>
+        <sphereGeometry args={[type === 'fire' ? 0.08 : 0.05, 6, 6]} />
       </instancedMesh>
 
       {type === 'freeze' && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={position}>
           <ringGeometry args={[0.5, 3, 32]} />
           <meshBasicMaterial color="#00aaff" opacity={0.3} transparent />
         </mesh>
       )}
 
       {type === 'fire' && (
-        <pointLight color="#ff6600" intensity={2} distance={5} />
+        <>
+          <pointLight ref={lightRef} color="#ff6600" intensity={5} distance={10} position={position} />
+          <mesh position={position}>
+            <sphereGeometry args={[0.4, 16, 16]} />
+            <meshBasicMaterial
+              color="#ffaa00"
+              opacity={0.8}
+              transparent
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        </>
       )}
     </group>
   )

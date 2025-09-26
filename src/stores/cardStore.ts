@@ -12,9 +12,11 @@ export interface Ability {
 }
 
 export interface Debuff {
-  type: 'frozen' | 'burned' | 'stunned' | 'poisoned'
+  type: 'frozen' | 'burned' | 'stunned' | 'poisoned' | 'fire_aura'
   duration: number
   damage?: number
+  stacks?: number  // For stackable debuffs like Fire Aura
+  maxStacks?: number  // Maximum stacks allowed
 }
 
 export interface CardData {
@@ -35,19 +37,19 @@ interface CardStore {
 
 const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
   {
-    name: 'Wizard',
+    name: 'Toy Wizard',
     maxHp: 80,
-    texture: '/wizard.png',
+    texture: '/wizardnft.png',
     abilities: [
       { name: 'Ice Nova', description: 'Freeze all enemies', effect: 'freeze', targetType: 'all' },
-      { name: 'Pyroblast', description: 'Heavy damage to one', damage: 35, targetType: 'single' },
+      { name: 'Pyroblast', description: 'Heavy fire damage (35 HP)', damage: 35, targetType: 'single' },
       { name: 'Lightning Zap', description: 'Damage all enemies', damage: 15, targetType: 'all' }
     ]
   },
   {
     name: 'Robot',
     maxHp: 120,
-    texture: '/robot.png',
+    texture: '/robotnft.png',
     abilities: [
       { name: 'Laser Beam', description: 'High damage', damage: 30, targetType: 'single' },
       { name: 'Shield Mode', description: 'Shield self', effect: 'shield', targetType: 'self' },
@@ -55,9 +57,9 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     ]
   },
   {
-    name: 'Dragon',
+    name: 'Dino',
     maxHp: 100,
-    texture: '/dragon.png',
+    texture: '/dinonft.png',
     abilities: [
       { name: 'Fire Breath', description: 'Burn single target', damage: 25, effect: 'burn', targetType: 'single' },
       { name: 'Wing Buffet', description: 'Damage all', damage: 20, targetType: 'all' },
@@ -65,9 +67,9 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     ]
   },
   {
-    name: 'Knight',
+    name: 'Brick Dude',
     maxHp: 110,
-    texture: '/knight.png',
+    texture: '/brickdudenft.png',
     abilities: [
       { name: 'Sword Strike', description: 'Basic attack', damage: 25, targetType: 'single' },
       { name: 'Shield Bash', description: 'Damage and stun', damage: 15, effect: 'stun', targetType: 'single' },
@@ -75,9 +77,9 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     ]
   },
   {
-    name: 'Ninja',
+    name: 'Duckie',
     maxHp: 70,
-    texture: '/ninja.png',
+    texture: '/duckienft.png',
     abilities: [
       { name: 'Shadow Strike', description: 'High damage', damage: 40, targetType: 'single' },
       { name: 'Smoke Bomb', description: 'Stun all enemies', effect: 'stun', targetType: 'all' },
@@ -85,19 +87,19 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     ]
   },
   {
-    name: 'Healer',
+    name: 'Arch Wizard',
     maxHp: 60,
-    texture: '/healer.png',
+    texture: '/archwizardnft.png',
     abilities: [
       { name: 'Heal Wave', description: 'Heal single ally', heal: 35, targetType: 'single' },
-      { name: 'Group Heal', description: 'Heal all allies', heal: 20, targetType: 'allies' },
+      { name: 'Fire Aura', description: 'Burn all enemies (5 dmg/turn, stacks 3x)', effect: 'burn', targetType: 'all' },
       { name: 'Holy Light', description: 'Damage undead', damage: 30, targetType: 'single' }
     ]
   },
   {
-    name: 'Pirate',
+    name: 'Voodoo',
     maxHp: 90,
-    texture: '/pirate.png',
+    texture: '/voodoonft.png',
     abilities: [
       { name: 'Cannon Blast', description: 'Area damage', damage: 25, targetType: 'all' },
       { name: 'Cutlass Slash', description: 'Single target', damage: 30, targetType: 'single' },
@@ -105,9 +107,9 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     ]
   },
   {
-    name: 'Alien',
+    name: 'Wind-up Toy',
     maxHp: 85,
-    texture: '/alien.png',
+    texture: '/winduptoynft.png',
     abilities: [
       { name: 'Ray Gun', description: 'Laser damage', damage: 28, targetType: 'single' },
       { name: 'Mind Control', description: 'Stun target', effect: 'stun', targetType: 'single' },

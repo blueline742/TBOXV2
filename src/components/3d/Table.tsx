@@ -1,58 +1,61 @@
 import { useRef } from 'react'
 import { Mesh } from 'three'
-import { MeshReflectorMaterial } from '@react-three/drei'
+import * as THREE from 'three'
 
 export function Table() {
   const tableRef = useRef<Mesh>(null)
 
   return (
     <group>
+      {/* Mirror-like surface using standard materials */}
       <mesh
         ref={tableRef}
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.5, 0]}
+        position={[0, -1, 0]}
         receiveShadow
       >
         <planeGeometry args={[12, 8]} />
-        <MeshReflectorMaterial
-          blur={[300, 100]}
-          resolution={2048}
-          mixBlur={1}
-          mixStrength={50}
-          roughness={0.9}
-          depthScale={1.2}
-          minDepthThreshold={0.4}
-          maxDepthThreshold={1.4}
-          color="#2a4a2a"
-          metalness={0.5}
-          mirror={0.5}
+        <meshStandardMaterial
+          color="#1a1a2e"
+          roughness={0.05}
+          metalness={0.95}
+          envMapIntensity={1}
         />
       </mesh>
 
-      <mesh position={[0, -0.6, 0]} receiveShadow>
-        <boxGeometry args={[12.5, 0.2, 8.5]} />
-        <meshStandardMaterial color="#1a2a1a" />
+      {/* Subtle glow effect underneath */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, -1.01, 0]}
+      >
+        <planeGeometry args={[12, 8]} />
+        <meshBasicMaterial
+          color="#4444ff"
+          opacity={0.1}
+          transparent
+        />
       </mesh>
 
+      {/* Optional subtle grid overlay for card positions */}
       {[-3, -1, 1, 3].map((x, i) => (
         <mesh
           key={`player-slot-${i}`}
-          position={[x, -0.49, 2]}
+          position={[x, -0.99, 2]}
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <planeGeometry args={[1.4, 1.8]} />
-          <meshBasicMaterial color="#334433" opacity={0.3} transparent />
+          <meshBasicMaterial color="#ffffff" opacity={0.03} transparent />
         </mesh>
       ))}
 
       {[-3, -1, 1, 3].map((x, i) => (
         <mesh
           key={`opponent-slot-${i}`}
-          position={[x, -0.49, -2]}
+          position={[x, -0.99, -2]}
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <planeGeometry args={[1.4, 1.8]} />
-          <meshBasicMaterial color="#443333" opacity={0.3} transparent />
+          <meshBasicMaterial color="#ffffff" opacity={0.03} transparent />
         </mesh>
       ))}
     </group>

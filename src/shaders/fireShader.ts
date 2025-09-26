@@ -7,16 +7,13 @@ export const fireVertexShader = `
     vUv = uv;
     vec3 pos = position;
 
-    // Fire rising motion with turbulence
-    pos.y += time * 1.5;
-    float turbulence = sin(time * 5.0 + position.x * 10.0) * 0.1;
-    pos.x += turbulence;
-    pos.z += cos(time * 5.0 + position.z * 10.0) * 0.1;
+    // No turbulence or upward bias - rely on useFrame lerp
+    pos.y += sin(time * 2.0) * 0.05; // Minimal flicker only
 
-    vAlpha = 1.0 - (pos.y / 3.0);
+    vAlpha = 1.0;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = 15.0 * (1.0 - pos.y / 3.0);
+    gl_PointSize = 20.0; // Larger for visibility
   }
 `
 

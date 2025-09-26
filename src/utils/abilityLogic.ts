@@ -1,15 +1,19 @@
 import { CardData, Ability, Debuff } from '@/stores/cardStore'
-import useGameStore from '@/stores/gameStore'
+import useOptimizedGameStore from '@/stores/optimizedGameStore'
 
 export interface AbilityResult {
   success: boolean
   message: string
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
     value?: number
     debuff?: Debuff
   }>
+  damages?: Array<{ cardId: string; amount: number; side: 'player' | 'opponent' }>
+  heals?: Array<{ cardId: string; amount: number; side: 'player' | 'opponent' }>
+  debuffs?: Array<{ cardId: string; debuff: Debuff; side: 'player' | 'opponent' }>
 }
 
 export function executeAbility(
@@ -20,6 +24,9 @@ export function executeAbility(
   allOpponentCards: CardData[]
 ): AbilityResult {
   const effects: AbilityResult['effects'] = []
+  const damages: AbilityResult['damages'] = []
+  const heals: AbilityResult['heals'] = []
+  const debuffs: AbilityResult['debuffs'] = []
 
   if (sourceCard.debuffs.some(d => d.type === 'stunned')) {
     return { success: false, message: `${sourceCard.name} is stunned!`, effects: [] }
@@ -52,113 +59,141 @@ export function executeAbility(
       break
   }
 
+  if (targets.length === 0) {
+    return { success: false, message: 'No valid targets!', effects: [] }
+  }
+
+  let message = `${sourceCard.name} uses ${ability.name}!`
+  let visualEffect: AbilityResult['visualEffect']
+
   targets.forEach(target => {
     if (ability.damage) {
-      const damage = ability.damage
-      effects.push({
-        type: 'damage',
-        targetId: target.id,
-        value: damage
-      })
+      const shielded = target.debuffs.some(d => d.type === 'frozen')
+      const damage = shielded ? Math.floor(ability.damage / 2) : ability.damage
+
+      effects.push({ type: 'damage', targetId: target.id, value: damage })
+
+      const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
+      damages.push({ cardId: target.id, amount: damage, side })
+
+      if (shielded) {
+        message += ` ${target.name} is shielded (${damage} damage)!`
+      } else {
+        message += ` ${target.name} takes ${damage} damage!`
+      }
+
+      if (ability.name === 'Pyroblast' || ability.name === 'Fire Breath') {
+        visualEffect = 'fire'
+      } else if (ability.name === 'Lightning Zap') {
+        visualEffect = 'lightning'
+      }
     }
 
     if (ability.heal) {
       const healAmount = Math.min(ability.heal, target.maxHp - target.hp)
-      effects.push({
-        type: 'heal',
-        targetId: target.id,
-        value: healAmount
-      })
+      effects.push({ type: 'heal', targetId: target.id, value: healAmount })
+
+      const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
+      heals.push({ cardId: target.id, amount: healAmount, side })
+
+      message += ` ${target.name} heals for ${healAmount}!`
+      visualEffect = 'heal'
     }
 
     if (ability.effect) {
-      let debuff: Debuff | null = null
+      // Special handling for Fire Aura
+      if (ability.name === 'Fire Aura') {
+        const fireAuraDebuff: Debuff = {
+          type: 'fire_aura',
+          duration: 999,  // Persistent until cleansed or game ends
+          damage: 5,      // Base damage, will be multiplied by stacks
+          stacks: 1,
+          maxStacks: 3
+        }
 
-      switch (ability.effect) {
-        case 'freeze':
-          debuff = { type: 'frozen', duration: 2 }
-          break
-        case 'burn':
-          debuff = { type: 'burned', duration: 3, damage: 5 }
-          break
-        case 'stun':
-          debuff = { type: 'stunned', duration: 1 }
-          break
-        case 'poison':
-          debuff = { type: 'poisoned', duration: 4, damage: 3 }
-          break
-      }
+        effects.push({ type: 'debuff', targetId: target.id, debuff: fireAuraDebuff })
+        const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
+        debuffs.push({ cardId: target.id, debuff: fireAuraDebuff, side })
 
-      if (debuff) {
-        effects.push({
-          type: 'debuff',
-          targetId: target.id,
-          debuff
-        })
+        // Check if target already has fire aura to customize message
+        const existingFireAura = target.debuffs.find(d => d.type === 'fire_aura')
+        if (existingFireAura && existingFireAura.stacks) {
+          const newStacks = Math.min((existingFireAura.stacks || 1) + 1, 3)
+          message += ` ${target.name}'s Fire Aura intensifies (${newStacks} stacks)!`
+        } else {
+          message += ` ${target.name} is engulfed in Fire Aura!`
+        }
+
+        visualEffect = 'fire'
+      } else {
+        // Normal debuff handling
+        const debuffMap: Record<string, Debuff> = {
+          'freeze': { type: 'frozen', duration: 2 },
+          'burn': { type: 'burned', duration: 3, damage: 5 },
+          'stun': { type: 'stunned', duration: 1 },
+          'poison': { type: 'poisoned', duration: 4, damage: 3 }
+        }
+
+        const debuff = debuffMap[ability.effect]
+        if (debuff) {
+          effects.push({ type: 'debuff', targetId: target.id, debuff })
+
+          const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
+          debuffs.push({ cardId: target.id, debuff, side })
+
+          message += ` ${target.name} is ${ability.effect}ed!`
+
+          if (ability.effect === 'freeze') visualEffect = 'freeze'
+          else if (ability.effect === 'poison') visualEffect = 'poison'
+        }
       }
 
       if (ability.effect === 'shield') {
-        effects.push({
-          type: 'effect',
-          targetId: target.id
-        })
+        effects.push({ type: 'effect', targetId: target.id })
+        message += ` ${target.name} gains a shield!`
       }
     }
   })
 
   return {
     success: true,
-    message: `${sourceCard.name} uses ${ability.name}!`,
-    effects
+    message,
+    effects,
+    damages,
+    heals,
+    debuffs,
+    visualEffect
   }
 }
 
-export function applyAbilityEffects(result: AbilityResult, gameStore: any) {
-  result.effects.forEach(effect => {
-    const side = gameStore.playerCards.find((c: CardData) => c.id === effect.targetId) ? 'player' : 'opponent'
+export function applyAbilityEffects(result: AbilityResult, store: any) {
+  // Update health for damaged cards
+  result.damages?.forEach(({ cardId, amount, side }) => {
+    store.damageCard(side, cardId, amount)
+  })
 
-    switch (effect.type) {
-      case 'damage':
-        if (effect.value) {
-          const currentCard = side === 'player'
-            ? gameStore.playerCards.find((c: CardData) => c.id === effect.targetId)
-            : gameStore.opponentCards.find((c: CardData) => c.id === effect.targetId)
+  // Update health for healed cards
+  result.heals?.forEach(({ cardId, amount, side }) => {
+    store.healCard(side, cardId, amount)
+  })
 
-          if (currentCard) {
-            gameStore.updateCardHealth(side, effect.targetId, currentCard.hp - effect.value)
-          }
-        }
-        break
-
-      case 'heal':
-        if (effect.value) {
-          const currentCard = side === 'player'
-            ? gameStore.playerCards.find((c: CardData) => c.id === effect.targetId)
-            : gameStore.opponentCards.find((c: CardData) => c.id === effect.targetId)
-
-          if (currentCard) {
-            gameStore.updateCardHealth(side, effect.targetId, currentCard.hp + effect.value)
-          }
-        }
-        break
-
-      case 'debuff':
-        if (effect.debuff) {
-          gameStore.addDebuffToCard(side, effect.targetId, effect.debuff)
-        }
-        break
-    }
+  // Apply debuffs
+  result.debuffs?.forEach(({ cardId, debuff, side }) => {
+    store.addDebuff(side, cardId, debuff)
   })
 }
 
-export function processDebuffDamage(gameStore: any) {
-  const allCards = [...gameStore.playerCards, ...gameStore.opponentCards]
+export function processDebuffDamage(store: any) {
+  const allCards = [
+    ...Array.from(store.playerCards.values()),
+    ...Array.from(store.opponentCards.values())
+  ]
 
-  allCards.forEach((card: CardData) => {
+  allCards.forEach(card => {
     card.debuffs.forEach(debuff => {
       if (debuff.damage && card.hp > 0) {
-        const side = gameStore.playerCards.find((c: CardData) => c.id === card.id) ? 'player' : 'opponent'
-        gameStore.updateCardHealth(side, card.id, card.hp - debuff.damage)
+        const side = store.playerCards.has(card.id) ? 'player' : 'opponent'
+        store.damageCard(side, card.id, debuff.damage)
       }
     })
   })
