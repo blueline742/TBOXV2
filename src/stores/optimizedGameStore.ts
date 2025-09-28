@@ -32,13 +32,35 @@ interface AutoBattle {
   gameMessage: string
 }
 
+export interface CombatLogEntry {
+  id: string
+  timestamp: number
+  attackerCard: {
+    name: string
+    texture: string
+  }
+  targetCards: Array<{
+    name: string
+    texture: string
+  }>
+  abilityName: string
+  totalDamage?: number
+  totalHealing?: number
+  effects?: string[]
+}
+
+interface CombatLog {
+  entries: CombatLogEntry[]
+  maxEntries: number
+}
+
 interface Cards {
   playerCards: Map<string, CardData>
   opponentCards: Map<string, CardData>
 }
 
 // ============= STORE SLICES =============
-interface GameState extends GameMeta, Selection, AutoBattle, Cards {
+interface GameState extends GameMeta, Selection, AutoBattle, Cards, CombatLog {
   // Actions - Game Flow
   setPhase: (phase: GamePhase) => void
   endTurn: () => void
@@ -75,6 +97,10 @@ interface GameState extends GameMeta, Selection, AutoBattle, Cards {
   updateCooldown: (side: 'player' | 'opponent', cardId: string, abilityIndex: number, cooldown: number) => void
   tickCooldowns: () => void
 
+  // Actions - Combat Log
+  addCombatLogEntry: (entry: Omit<CombatLogEntry, 'id' | 'timestamp'>) => void
+  clearCombatLog: () => void
+
   // Selectors
   getCard: (side: 'player' | 'opponent', cardId: string) => CardData | undefined
   getAliveCards: (side: 'player' | 'opponent') => CardData[]
@@ -100,6 +126,8 @@ const useOptimizedGameStore = create<GameState>()(
         gameMessage: '',
         playerCards: new Map(),
         opponentCards: new Map(),
+        entries: [],
+        maxEntries: 10,
 
         // ============= GAME FLOW ACTIONS =============
         setPhase: (phase) => set((state) => {
@@ -388,6 +416,26 @@ const useOptimizedGameStore = create<GameState>()(
           processCards(state.opponentCards)
         }),
 
+        // ============= COMBAT LOG ACTIONS =============
+        addCombatLogEntry: (entry) => set((state) => {
+          const newEntry: CombatLogEntry = {
+            ...entry,
+            id: `log-${Date.now()}-${Math.random()}`,
+            timestamp: Date.now()
+          }
+
+          state.entries.unshift(newEntry)
+
+          // Keep only the max number of entries
+          if (state.entries.length > state.maxEntries) {
+            state.entries = state.entries.slice(0, state.maxEntries)
+          }
+        }),
+
+        clearCombatLog: () => set((state) => {
+          state.entries = []
+        }),
+
         // ============= SELECTORS =============
         getCard: (side, cardId) => {
           const state = get()
@@ -486,6 +534,15 @@ export const useAutoBattle = () => useOptimizedGameStore(
     setAutoSelectedAbility: state.setAutoSelectedAbility,
     setWaitingForTarget: state.setWaitingForTarget,
     setGameMessage: state.setGameMessage,
+  }))
+)
+
+// Combat Log Selectors
+export const useCombatLog = () => useOptimizedGameStore(
+  useShallow((state) => ({
+    entries: state.entries,
+    addCombatLogEntry: state.addCombatLogEntry,
+    clearCombatLog: state.clearCombatLog,
   }))
 )
 

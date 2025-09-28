@@ -7,10 +7,12 @@ import useOptimizedGameStore, {
   useSelection,
   useGameActions,
   useAutoBattle,
-  useCard
+  useCard,
+  useCombatLog
 } from '@/stores/optimizedGameStore'
 import useCardStore from '@/stores/cardStore'
 import { executeAbility, applyAbilityEffects } from '@/utils/abilityLogic'
+import { CombatLog } from './CombatLog'
 
 export interface SpellEffectData {
   id: string
@@ -32,6 +34,7 @@ export function GameUI() {
   const winner = useWinner()
   const { targetCardId, selectTarget } = useSelection()
   const { endTurn, resetGame, setCurrentTurn } = useGameActions()
+  const { addCombatLogEntry } = useCombatLog()
 
   // Use Zustand auto-battle state instead of local state
   const {
@@ -275,6 +278,41 @@ export function GameUI() {
         window.dispatchEvent(new CustomEvent('spellEffect', { detail: effectData }))
       }
 
+      // Add combat log entry
+      const targetCards = result.damages?.map(d => {
+        const card = [...playerCards, ...opponentCards].find(c => c.id === d.cardId)
+        return card ? { name: card.name, texture: card.texture } : null
+      }).filter(Boolean) || []
+
+      const healTargets = result.heals?.map(h => {
+        const card = [...playerCards, ...opponentCards].find(c => c.id === h.cardId)
+        return card ? { name: card.name, texture: card.texture } : null
+      }).filter(Boolean) || []
+
+      const allTargets = [...targetCards, ...healTargets] as Array<{name: string, texture: string}>
+
+      const totalDamage = result.damages?.reduce((sum, d) => sum + d.amount, 0) || 0
+      const totalHealing = result.heals?.reduce((sum, h) => sum + h.amount, 0) || 0
+
+      const effects: string[] = []
+      if (result.debuffs && result.debuffs.length > 0) {
+        result.debuffs.forEach(d => {
+          if (d.debuff.type) effects.push(d.debuff.type)
+        })
+      }
+
+      addCombatLogEntry({
+        attackerCard: {
+          name: autoSelectedCard.name,
+          texture: autoSelectedCard.texture
+        },
+        targetCards: allTargets,
+        abilityName: ability.name,
+        totalDamage,
+        totalHealing,
+        effects: effects.length > 0 ? effects : undefined
+      })
+
       // Apply damage/effects after visual
       const damageDelay = ability.name === 'Pyroblast' ? 1000 : 500
       setTimeout(() => {
@@ -297,33 +335,12 @@ export function GameUI() {
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute top-4 left-4 text-white pointer-events-auto">
-        <div className="bg-black/70 p-4 rounded-lg">
-          <h2 className="text-xl font-bold mb-2">Turn {turnNumber}</h2>
-          <p className="text-sm">
-            {currentTurn === 'player' ? 'Your Turn' : "Opponent's Turn"}
-          </p>
-          {autoSelectedCard && (
-            <div className="mt-2 text-sm">
-              <p className="font-semibold">{autoSelectedCard.name} selected</p>
-              <p className="opacity-75">
-                Ability: {autoSelectedCard.abilities[autoSelectedAbilityIndex || 0]?.name}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Combat Log - Left side */}
+      <CombatLog />
 
-      {gameMessage && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white pointer-events-auto">
-          <div className="bg-black/80 px-6 py-3 rounded-lg">
-            <p className="text-lg font-semibold">{gameMessage}</p>
-          </div>
-        </div>
-      )}
 
       {isWaitingForTarget && currentTurn === 'player' && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-auto">
+        <div className="absolute top-4 right-4 pointer-events-auto">
           <div className="bg-black/80 p-4 rounded-lg text-white">
             <h3 className="text-lg font-bold mb-2">Select a Target</h3>
             <p className="text-sm opacity-75">
@@ -355,29 +372,29 @@ export function GameUI() {
         </div>
       )}
 
-      <div className="absolute top-4 right-4 text-white pointer-events-auto">
-        <div className="bg-black/70 p-4 rounded-lg">
-          <h3 className="font-bold mb-2">Auto Battle Mode</h3>
-          <ul className="text-sm space-y-1">
-            <li>Card & spell auto-selected</li>
-            <li>Click enemy to target</li>
-            <li>Watch the battle unfold!</li>
-          </ul>
-
-          {/* End Turn Button */}
-          <button
-            onClick={() => endTurn()}
-            className={`mt-4 w-full px-4 py-2 text-white font-bold rounded-lg shadow-lg transition-all transform hover:scale-105 ${
-              currentTurn === 'player'
-                ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
-                : 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
-            } ${phase === 'animating' || phase === 'game_over' ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={phase === 'animating' || phase === 'game_over'}
-          >
-            {currentTurn === 'player' ? 'End Your Turn' : 'End Opponent Turn'}
-          </button>
-        </div>
+      {/* End Turn Button - Bottom Center */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto">
+        <button
+          onClick={() => endTurn()}
+          className={`px-8 py-3 text-white font-bold rounded-full shadow-2xl transition-all transform hover:scale-110 ${
+            currentTurn === 'player'
+              ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
+              : 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
+          } ${phase === 'animating' || phase === 'game_over' ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={phase === 'animating' || phase === 'game_over'}
+        >
+          {currentTurn === 'player' ? 'End Turn' : 'End Opponent Turn'}
+        </button>
       </div>
+
+      {/* Responsive styles */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .absolute.top-4.left-4 {
+            margin-left: 0 !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
