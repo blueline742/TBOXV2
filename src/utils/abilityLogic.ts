@@ -1,5 +1,7 @@
 import { CardData, Ability, Debuff } from '@/stores/cardStore'
-import useOptimizedGameStore from '@/stores/optimizedGameStore'
+
+// Track last used enemy ability for spell steal
+let lastEnemyAbility: Ability | null = null
 
 export interface AbilityResult {
   success: boolean
@@ -27,6 +29,12 @@ export function executeAbility(
   const damages: AbilityResult['damages'] = []
   const heals: AbilityResult['heals'] = []
   const debuffs: AbilityResult['debuffs'] = []
+
+  // Track enemy abilities for spell steal (only track opponent abilities)
+  const isOpponentCard = allOpponentCards.some(c => c.id === sourceCard.id)
+  if (isOpponentCard && ability.effect !== 'spell_steal') {
+    lastEnemyAbility = ability
+  }
 
   if (sourceCard.debuffs.some(d => d.type === 'stunned')) {
     return { success: false, message: `${sourceCard.name} is stunned!`, effects: [] }
@@ -152,6 +160,46 @@ export function executeAbility(
         effects.push({ type: 'effect', targetId: target.id })
         message += ` ${target.name} gains a shield!`
       }
+
+      // Handle revival
+      if (ability.effect === 'revive') {
+        // Find a dead ally
+        const deadAllies = allPlayerCards.filter(c => c.hp <= 0)
+        if (deadAllies.length > 0 && target) {
+          // Revive the target with 50% HP
+          const reviveHP = Math.floor(target.maxHp * 0.5)
+          effects.push({ type: 'heal', targetId: target.id, value: reviveHP })
+          const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
+          heals.push({ cardId: target.id, amount: reviveHP, side })
+          message = `${sourceCard.name} resurrects ${target.name} with ${reviveHP} HP!`
+          visualEffect = 'heal'
+        } else {
+          message = `${sourceCard.name} tries to resurrect but no fallen allies to revive!`
+        }
+      }
+
+      // Handle spell steal
+      if (ability.effect === 'spell_steal') {
+        if (lastEnemyAbility) {
+          // Execute the stolen ability
+          const stolenResult = executeAbility(
+            lastEnemyAbility,
+            sourceCard,
+            targetCard,
+            allPlayerCards,
+            allOpponentCards
+          )
+
+          if (stolenResult.success) {
+            message = `${sourceCard.name} echoes ${lastEnemyAbility.name}! ${stolenResult.message}`
+            return stolenResult // Return the stolen ability's result
+          } else {
+            message = `${sourceCard.name} tries to echo but the spell fails!`
+          }
+        } else {
+          message = `${sourceCard.name} tries to echo but no enemy spell to copy!`
+        }
+      }
     }
   })
 
@@ -184,13 +232,13 @@ export function applyAbilityEffects(result: AbilityResult, store: any) {
 }
 
 export function processDebuffDamage(store: any) {
-  const allCards = [
-    ...Array.from(store.playerCards.values()),
-    ...Array.from(store.opponentCards.values())
+  const allCards: CardData[] = [
+    ...(Array.from(store.playerCards.values()) as CardData[]),
+    ...(Array.from(store.opponentCards.values()) as CardData[])
   ]
 
-  allCards.forEach(card => {
-    card.debuffs.forEach(debuff => {
+  allCards.forEach((card: CardData) => {
+    card.debuffs.forEach((debuff: Debuff) => {
       if (debuff.damage && card.hp > 0) {
         const side = store.playerCards.has(card.id) ? 'player' : 'opponent'
         store.damageCard(side, card.id, debuff.damage)

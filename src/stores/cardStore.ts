@@ -5,7 +5,7 @@ export interface Ability {
   description: string
   damage?: number
   heal?: number
-  effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison'
+  effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison' | 'revive' | 'spell_steal'
   targetType: 'single' | 'all' | 'self' | 'allies'
   cooldown?: number
   currentCooldown?: number
@@ -114,6 +114,16 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
       { name: 'Ray Gun', description: 'Laser damage', damage: 28, targetType: 'single' },
       { name: 'Mind Control', description: 'Stun target', effect: 'stun', targetType: 'single' },
       { name: 'Probe', description: 'Damage over time', damage: 10, effect: 'poison', targetType: 'single' }
+    ]
+  },
+  {
+    name: 'Spirit Shaman',
+    maxHp: 75,
+    texture: '/shamannft.png',
+    abilities: [
+      { name: 'Resurrection', description: 'Revive a fallen ally with 50% HP', effect: 'revive', targetType: 'single' },
+      { name: 'Healing Totem', description: 'Heal all allies', heal: 25, targetType: 'allies' },
+      { name: 'Spell Echo', description: 'Copy last enemy spell used', effect: 'spell_steal', targetType: 'single' }
     ]
   }
 ]
