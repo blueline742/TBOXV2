@@ -18,7 +18,10 @@
       "Bash(git remote add:*)",
       "Bash(git push:*)",
       "Bash(npm install:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(cmd /c:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd Spirit Shaman character with unique abilities\n\n- Implemented new Spirit Shaman card with 75 HP\n- Added Resurrection ability to revive fallen allies with 50% HP\n- Added Spell Echo ability to copy and use enemy''s last spell\n- Added Healing Totem for group healing (25 HP to all allies)\n- Updated ability system to support ''revive'' and ''spell_steal'' effects\n- Fixed TypeScript errors in abilityLogic.ts\n- Added comprehensive guide (ADDING_NEW_CARDS_GUIDE.md) for future development\n- Includes placeholder image for Spirit Shaman character\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

@@ -35,13 +35,20 @@ That's it! The card will now randomly appear in games.
 
 ## Understanding the Architecture {#architecture}
 
+### State Management with Zustand
+
+This game uses **Zustand** for state management - a lightweight alternative to Redux. The main game state is managed in `optimizedGameStore.ts` using:
+- **Zustand** with **Immer** middleware for immutable state updates
+- **Map** data structures for optimized card storage
+- **DevTools** integration for debugging
+
 ### Key Files and Their Purposes
 
 | File | Purpose | When to Edit |
 |------|---------|--------------|
 | `src/stores/cardStore.ts` | Card definitions & abilities | Adding new cards |
 | `src/utils/abilityLogic.ts` | Ability execution logic | Adding new effect types |
-| `src/stores/optimizedGameStore.ts` | Game state management | Adding new game mechanics |
+| `src/stores/optimizedGameStore.ts` | Zustand store - Game state management | Adding new game mechanics |
 | `src/components/3d/Effects.tsx` | Visual spell effects | Customizing spell animations |
 | `src/components/GameScene.tsx` | 3D scene rendering | Changing how cards appear |
 | `src/components/GameUI.tsx` | User interface | Modifying game controls |
@@ -406,6 +413,26 @@ Abilities can have cooldowns to prevent spam:
   damage: 100,
   targetType: 'single',
   cooldown: 3  // Can only use every 3 turns
+}
+```
+
+### Working with Zustand Store
+
+When creating complex abilities that need to interact with game state:
+
+```typescript
+// Access store from ability logic
+import { useOptimizedGameStore } from '@/stores/optimizedGameStore'
+
+// In a component:
+const { playerCards, opponentCards, damageCard } = useOptimizedGameStore()
+
+// In abilityLogic.ts, the store is passed as parameter:
+export function applyAbilityEffects(result: AbilityResult, store: any) {
+  // store has methods like:
+  store.damageCard(side, cardId, amount)
+  store.healCard(side, cardId, amount)
+  store.addDebuff(side, cardId, debuff)
 }
 ```
 

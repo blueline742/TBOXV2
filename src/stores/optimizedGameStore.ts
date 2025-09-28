@@ -106,20 +106,26 @@ const useOptimizedGameStore = create<GameState>()(
           state.phase = phase
         }),
 
-        endTurn: () => set((state) => {
-          // Clear selections
-          state.selectedCardId = null
-          state.targetCardId = null
-          state.selectedAbilityIndex = null
-          state.autoSelectedCardId = null
-          state.autoSelectedAbilityIndex = null
-          state.isWaitingForTarget = false
+        endTurn: () => {
+          // First, tick debuffs and cooldowns at the end of each turn
+          get().tickDebuffs()
+          get().tickCooldowns()
 
-          // Switch turns
-          state.currentTurn = state.currentTurn === 'player' ? 'opponent' : 'player'
-          state.phase = state.currentTurn === 'player' ? 'player_turn' : 'opponent_turn'
-          state.turnNumber += 1
-        }, false, 'endTurn'),
+          set((state) => {
+            // Clear selections
+            state.selectedCardId = null
+            state.targetCardId = null
+            state.selectedAbilityIndex = null
+            state.autoSelectedCardId = null
+            state.autoSelectedAbilityIndex = null
+            state.isWaitingForTarget = false
+
+            // Switch turns
+            state.currentTurn = state.currentTurn === 'player' ? 'opponent' : 'player'
+            state.phase = state.currentTurn === 'player' ? 'player_turn' : 'opponent_turn'
+            state.turnNumber += 1
+          }, false, 'endTurn')
+        },
 
         setCurrentTurn: (turn) => set((state) => {
           state.currentTurn = turn

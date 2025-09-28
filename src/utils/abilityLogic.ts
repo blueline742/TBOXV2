@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
@@ -73,6 +73,56 @@ export function executeAbility(
 
   let message = `${sourceCard.name} uses ${ability.name}!`
   let visualEffect: AbilityResult['visualEffect']
+
+  // Special handling for Battery Drain ability
+  if (ability.name === 'Battery Drain') {
+    visualEffect = 'battery_drain'
+    console.log('[BATTERY DRAIN DEBUG] Ability detected:', ability.name, 'Visual effect set to:', visualEffect)
+
+    // Calculate total HP to drain (20 per enemy)
+    const enemyTargets = allOpponentCards.filter(card => card.hp > 0)
+    let totalDrained = 0
+
+    // Damage all enemies
+    enemyTargets.forEach(enemy => {
+      const drainAmount = Math.min(20, enemy.hp) // Don't drain more than they have
+      totalDrained += drainAmount
+
+      effects.push({ type: 'damage', targetId: enemy.id, value: drainAmount })
+      const side = allPlayerCards.find(c => c.id === enemy.id) ? 'player' : 'opponent'
+      damages.push({ cardId: enemy.id, amount: drainAmount, side })
+    })
+
+    // Redistribute health to all allies
+    const allyTargets = allPlayerCards.filter(card => card.hp > 0)
+    if (allyTargets.length > 0 && totalDrained > 0) {
+      const healPerAlly = Math.floor(totalDrained / allyTargets.length)
+
+      allyTargets.forEach(ally => {
+        const healAmount = Math.min(healPerAlly, ally.maxHp - ally.hp)
+        if (healAmount > 0) {
+          effects.push({ type: 'heal', targetId: ally.id, value: healAmount })
+          const side = allPlayerCards.find(c => c.id === ally.id) ? 'player' : 'opponent'
+          heals.push({ cardId: ally.id, amount: healAmount, side })
+        }
+      })
+
+      message = `${sourceCard.name} drains ${totalDrained} HP and redistributes it to allies!`
+    } else {
+      message = `${sourceCard.name} drains ${totalDrained} HP from enemies!`
+    }
+
+    // Return early for Battery Drain
+    return {
+      success: true,
+      message,
+      effects,
+      damages,
+      heals,
+      debuffs,
+      visualEffect
+    }
+  }
 
   targets.forEach(target => {
     if (ability.damage) {
@@ -151,8 +201,15 @@ export function executeAbility(
 
           message += ` ${target.name} is ${ability.effect}ed!`
 
-          if (ability.effect === 'freeze') visualEffect = 'freeze'
-          else if (ability.effect === 'poison') visualEffect = 'poison'
+          // Debug logging for Ice Nova
+          if (ability.name === 'Ice Nova') {
+            console.log('[ICE NOVA DEBUG] Applying freeze to:', target.name, 'Debuff:', debuff)
+            visualEffect = 'ice_nova'
+          } else if (ability.effect === 'freeze') {
+            visualEffect = 'freeze'
+          } else if (ability.effect === 'poison') {
+            visualEffect = 'poison'
+          }
         }
       }
 
@@ -227,6 +284,7 @@ export function applyAbilityEffects(result: AbilityResult, store: any) {
 
   // Apply debuffs
   result.debuffs?.forEach(({ cardId, debuff, side }) => {
+    console.log('[DEBUG] Applying debuff:', debuff, 'to card:', cardId, 'side:', side)
     store.addDebuff(side, cardId, debuff)
   })
 }

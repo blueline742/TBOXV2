@@ -1,14 +1,18 @@
 'use client'
 
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Environment, Stars } from '@react-three/drei'
-import { Suspense, useEffect, useState } from 'react'
+import { Canvas, useLoader } from '@react-three/fiber'
+import { OrbitControls, PerspectiveCamera, Environment, Stars, useHelper } from '@react-three/drei'
+import { Suspense, useEffect, useState, useRef } from 'react'
+import * as THREE from 'three'
 import useOptimizedGameStore, { useGamePhase, useCurrentTurn, useGameActions } from '@/stores/optimizedGameStore'
 import { Table } from './3d/Table'
 import { Card } from './3d/Card'
 import { SpellEffect } from './3d/Effects'
+import { Skybox } from './3d/Skybox'
 import { VFXFireball } from './3d/VFXFireball'
 import { VFXLightning } from './3d/VFXLightning'
+import { VFXIceNova } from './3d/VFXIceNova'
+import { VFXBatteryDrain } from './3d/VFXBatteryDrain'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
@@ -25,11 +29,13 @@ export function GameScene() {
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
     targetPositions?: [number, number, number][]  // For multi-target effects
+    enemyPositions?: [number, number, number][]  // For Battery Drain
+    allyPositions?: [number, number, number][]  // For Battery Drain
   }>>([])
 
   // Listen for spell effects from GameUI
@@ -43,7 +49,9 @@ export function GameScene() {
         type: effectData.type,
         position: effectData.position,
         sourcePosition: effectData.sourcePosition,
-        targetPosition: effectData.targetPosition
+        targetPosition: effectData.targetPosition,
+        enemyPositions: effectData.enemyPositions,
+        allyPositions: effectData.allyPositions
       }])
 
       // Auto-remove effect after duration
@@ -59,6 +67,12 @@ export function GameScene() {
 
   useEffect(() => {
     if (phase === 'opponent_turn') {
+      // Notify UI that opponent is thinking
+      const thinkingEvent = new CustomEvent('aiActionComplete', {
+        detail: { message: "Opponent is thinking..." }
+      })
+      window.dispatchEvent(thinkingEvent)
+
       const timer = setTimeout(() => {
         const action = aiSelectAction(opponentCards, playerCards)
 
@@ -87,13 +101,29 @@ export function GameScene() {
 
               const sourcePosition: [number, number, number] = sourceCard.position || [0, 1, 0]
 
-              setActiveEffects(prev => [...prev, {
-                id: `effect-${Date.now()}`,
-                type: effectType,
-                position: sourcePosition,
-                sourcePosition: sourcePosition,
-                targetPosition: effectPosition
-              }])
+              // Special handling for Battery Drain effect
+              console.log('[GAMESCENE DEBUG] Effect type:', effectType, 'Result visual:', result.visualEffect)
+              if (effectType === 'battery_drain') {
+                const enemyPos = playerCards.map(c => c.position || [0, 0, 0]) as [number, number, number][]
+                const allyPos = opponentCards.map(c => c.position || [0, 0, 0]) as [number, number, number][]
+
+                setActiveEffects(prev => [...prev, {
+                  id: `effect-${Date.now()}`,
+                  type: effectType,
+                  position: sourcePosition,
+                  sourcePosition: sourcePosition,
+                  enemyPositions: enemyPos,
+                  allyPositions: allyPos
+                }])
+              } else {
+                setActiveEffects(prev => [...prev, {
+                  id: `effect-${Date.now()}`,
+                  type: effectType,
+                  position: sourcePosition,
+                  sourcePosition: sourcePosition,
+                  targetPosition: effectPosition
+                }])
+              }
 
 
               applyAbilityEffects(result, useOptimizedGameStore.getState())
@@ -101,14 +131,18 @@ export function GameScene() {
               setTimeout(() => {
                 processDebuffDamage(useOptimizedGameStore.getState())
                 store.checkWinCondition()
+
+                // Set a message to indicate AI has finished its action
+                const gameUIEvent = new CustomEvent('aiActionComplete', {
+                  detail: { message: `${sourceCard.name} used ${ability.name}! Click End Opponent Turn to continue.` }
+                })
+                window.dispatchEvent(gameUIEvent)
               }, 500)
             }
           }
         }
 
-        setTimeout(() => {
-          endTurn()
-        }, 2500)
+        // Don't automatically end turn - wait for manual button click
       }, 1500)
 
       return () => clearTimeout(timer)
@@ -133,18 +167,56 @@ export function GameScene() {
         zoomSpeed={0.5}
       />
 
-      <ambientLight intensity={0.3} />
+      {/* Natural room lighting setup */}
+      {/* Warm ambient light - like room lighting */}
+      <ambientLight intensity={0.6} color="#fff5e6" />
+
+      {/* Main sunlight coming through window */}
       <directionalLight
-        position={[5, 10, 5]}
-        intensity={1}
+        position={[5, 12, 8]}
+        intensity={1.2}
+        color="#fffaf0"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
+        shadow-camera-near={0.5}
+        shadow-camera-far={50}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+      />
+
+      {/* Secondary fill light - softer shadows */}
+      <directionalLight
+        position={[-5, 8, 5]}
+        intensity={0.4}
+        color="#e6f3ff"
+      />
+
+      {/* Rim light for depth */}
+      <pointLight
+        position={[0, 5, -8]}
+        intensity={0.5}
+        color="#ffd700"
+        distance={15}
+        decay={2}
+      />
+
+      {/* Soft uplight from table surface */}
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={0.3}
+        color="#fff8dc"
+        distance={20}
       />
 
       <Suspense fallback={null}>
-        <Environment preset="night" />
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
+        {/* Custom skybox background */}
+        <Skybox />
+
+        {/* Optional: Keep stars for additional atmosphere, or remove if not needed */}
+        {/* <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade /> */}
 
         <Table />
 
@@ -171,7 +243,21 @@ export function GameScene() {
         <VFXSystem />
 
         {activeEffects.map(effect => (
-          effect.type === 'fireball' ? (
+          effect.type === 'battery_drain' ? (
+            <VFXBatteryDrain
+              key={effect.id}
+              sourcePosition={effect.sourcePosition || effect.position}
+              enemyPositions={effect.enemyPositions || []}
+              allyPositions={effect.allyPositions || []}
+              onComplete={() => removeEffect(effect.id)}
+            />
+          ) : effect.type === 'ice_nova' ? (
+            <VFXIceNova
+              key={effect.id}
+              position={effect.position}
+              onComplete={() => removeEffect(effect.id)}
+            />
+          ) : effect.type === 'fireball' ? (
             <VFXFireball
               key={effect.id}
               position={effect.sourcePosition || effect.position}

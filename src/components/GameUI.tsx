@@ -14,12 +14,14 @@ import { executeAbility, applyAbilityEffects } from '@/utils/abilityLogic'
 
 export interface SpellEffectData {
   id: string
-  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning'
+  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain'
   position: [number, number, number]
   targetId: string
   sourcePosition?: [number, number, number]
   targetPosition?: [number, number, number]
   targetPositions?: [number, number, number][]
+  enemyPositions?: [number, number, number][]  // For Battery Drain
+  allyPositions?: [number, number, number][]  // For Battery Drain
 }
 
 export function GameUI() {
@@ -85,17 +87,27 @@ export function GameUI() {
     }
   }, [availableCards, phase, setCurrentTurn, setGameMessage, store])
 
-  // Auto-select card and ability at the start of each turn
+  // Listen for AI action completion
   useEffect(() => {
-    if ((phase === 'player_turn' || phase === 'opponent_turn') && !autoSelectedCardId) {
+    const handleAIActionComplete = (event: CustomEvent) => {
+      setGameMessage(event.detail.message)
+    }
+
+    window.addEventListener('aiActionComplete' as any, handleAIActionComplete)
+    return () => window.removeEventListener('aiActionComplete' as any, handleAIActionComplete)
+  }, [setGameMessage])
+
+  // Auto-select card and ability at the start of each turn (PLAYER ONLY)
+  useEffect(() => {
+    // Only auto-select for player turns - let GameScene handle AI turns
+    if (phase === 'player_turn' && !autoSelectedCardId) {
       // Add a small delay to prevent rapid cycling when turns switch
       const selectionTimer = setTimeout(() => {
-        const activeTeam = currentTurn === 'player' ? playerCards : opponentCards
+        const activeTeam = playerCards
         const aliveCards = activeTeam.filter(card => card.hp > 0 && !card.debuffs.some(d => d.type === 'stunned' || d.type === 'frozen'))
 
         if (aliveCards.length === 0) {
-          setGameMessage(`${currentTurn === 'player' ? 'All your cards' : 'All opponent cards'} are unable to act!`)
-          setTimeout(() => endTurn(), 2000)
+          setGameMessage(`All your cards are unable to act! Click End Turn.`)
           return
         }
 
@@ -116,21 +128,16 @@ export function GameUI() {
         setAutoSelectedAbility(randomAbilityIndex)
 
         const ability = randomCard.abilities[randomAbilityIndex]
-        setGameMessage(`${randomCard.name} prepares ${ability.name}! ${currentTurn === 'player' ? 'Select a target!' : ''}`)
+        setGameMessage(`${randomCard.name} prepares ${ability.name}! Select a target!`)
 
         // For player turn, wait for target selection
-        // For opponent turn, auto-select target after a delay
-        if (currentTurn === 'player') {
-          setWaitingForTarget(true)
-        } else {
-          setTimeout(() => autoSelectTarget(), 1500)
-        }
+        setWaitingForTarget(true)
       }, 100) // Small delay to prevent rapid cycling
 
       return () => clearTimeout(selectionTimer)
     }
-  }, [phase, currentTurn, autoSelectedCardId, playerCards, opponentCards,
-      setAutoSelectedCard, setAutoSelectedAbility, setWaitingForTarget, setGameMessage, endTurn])
+  }, [phase, autoSelectedCardId, playerCards,
+      setAutoSelectedCard, setAutoSelectedAbility, setWaitingForTarget, setGameMessage])
 
   // Auto-select target for opponent
   const autoSelectTarget = () => {
@@ -221,6 +228,38 @@ export function GameUI() {
                           ability.name === 'Lightning Zap' ? 'lightning' :
                           result.visualEffect || 'fire'
 
+        // For Battery Drain, we need enemy and ally positions
+        let enemyPositions: [number, number, number][] | undefined
+        let allyPositions: [number, number, number][] | undefined
+
+        if (effectType === 'battery_drain') {
+          // Get actual enemy positions from cards
+          enemyPositions = opponentCards.filter(c => c.hp > 0).map((card) => {
+            // Use actual card positions if available, otherwise calculate
+            if (card.position) {
+              return card.position
+            }
+            const index = opponentCards.indexOf(card)
+            const adjustedIndex = index - Math.floor(opponentCards.length / 2)
+            return [-3 + adjustedIndex * 2, 0.5, -2] as [number, number, number]
+          })
+
+          // Get actual ally positions from cards
+          allyPositions = playerCards.filter(c => c.hp > 0).map((card) => {
+            // Use actual card positions if available, otherwise calculate
+            if (card.position) {
+              return card.position
+            }
+            const index = playerCards.indexOf(card)
+            const adjustedIndex = index - Math.floor(playerCards.length / 2)
+            return [-3 + adjustedIndex * 2, 0.5, 2] as [number, number, number]
+          })
+
+          console.log('[BATTERY DRAIN] Enemy positions:', enemyPositions)
+          console.log('[BATTERY DRAIN] Ally positions:', allyPositions)
+          console.log('[BATTERY DRAIN] Source position:', sourcePos)
+        }
+
         const effectData: SpellEffectData = {
           id: `effect-${Date.now()}`,
           type: effectType,
@@ -228,7 +267,9 @@ export function GameUI() {
           targetId: targetCard?.id || '',
           sourcePosition: sourcePos,
           targetPosition: targetPos,
-          targetPositions: targetPositions
+          targetPositions: targetPositions,
+          enemyPositions: enemyPositions,
+          allyPositions: allyPositions
         }
 
         window.dispatchEvent(new CustomEvent('spellEffect', { detail: effectData }))
@@ -241,14 +282,11 @@ export function GameUI() {
         store.checkWinCondition()
       }, damageDelay)
 
-      // End turn and reset for next turn - state will be cleared by store
-      setTimeout(() => {
-        selectTarget(null)
-        endTurn()
-      }, 2500)
+      // Don't automatically end turn - wait for manual button
+      selectTarget(null)
+      setGameMessage(`${result.message} - Click End Turn to continue.`)
     } else {
       setGameMessage(result.message)
-      setTimeout(() => endTurn(), 2000)
     }
   }
 
@@ -325,6 +363,19 @@ export function GameUI() {
             <li>Click enemy to target</li>
             <li>Watch the battle unfold!</li>
           </ul>
+
+          {/* End Turn Button */}
+          <button
+            onClick={() => endTurn()}
+            className={`mt-4 w-full px-4 py-2 text-white font-bold rounded-lg shadow-lg transition-all transform hover:scale-105 ${
+              currentTurn === 'player'
+                ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
+                : 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
+            } ${phase === 'animating' || phase === 'game_over' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={phase === 'animating' || phase === 'game_over'}
+          >
+            {currentTurn === 'player' ? 'End Your Turn' : 'End Opponent Turn'}
+          </button>
         </div>
       </div>
     </div>

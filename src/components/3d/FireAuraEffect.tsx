@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { extend } from '@react-three/fiber'
@@ -66,6 +66,35 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
   const materialRef = useRef<any>(null)
   const particlesRef = useRef<THREE.Points>(null)
 
+  // Use useMemo to create stable particle geometry that doesn't recreate on every render
+  // Always use max possible particle count to avoid buffer resize issues
+  const particleGeometry = useMemo(() => {
+    const maxStacks = 3
+    const particlesPerStack = 20
+    const count = particlesPerStack * maxStacks // Always allocate for max stacks
+    const positions = new Float32Array(count * 3)
+
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2
+      const radius = 0.8 + Math.random() * 0.3
+      positions[i * 3] = Math.cos(angle) * radius
+      positions[i * 3 + 1] = Math.random() * 2 - 0.5
+      positions[i * 3 + 2] = Math.sin(angle) * radius
+    }
+
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+
+    return geometry
+  }, []) // Empty dependency array - create once and reuse
+
+  // Update draw range based on current stacks
+  useMemo(() => {
+    if (particleGeometry) {
+      particleGeometry.setDrawRange(0, 20 * stacks)
+    }
+  }, [stacks, particleGeometry])
+
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.time = state.clock.elapsedTime
@@ -73,12 +102,14 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
     if (meshRef.current) {
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.5
     }
-    if (particlesRef.current) {
+    if (particlesRef.current && particlesRef.current.geometry.attributes.position) {
       particlesRef.current.rotation.y = state.clock.elapsedTime * 0.3
 
       // Animate particles upward
       const positions = particlesRef.current.geometry.attributes.position.array as Float32Array
-      for (let i = 1; i < positions.length; i += 3) {
+      // Only animate the visible particles based on current stack count
+      const visibleParticles = 20 * stacks * 3
+      for (let i = 1; i < visibleParticles; i += 3) {
         positions[i] += 0.02
         if (positions[i] > 2) {
           positions[i] = -0.5
@@ -87,21 +118,6 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
       particlesRef.current.geometry.attributes.position.needsUpdate = true
     }
   })
-
-  // Create particle geometry
-  const particleCount = 20 * stacks
-  const particlePositions = new Float32Array(particleCount * 3)
-
-  for (let i = 0; i < particleCount; i++) {
-    const angle = (i / particleCount) * Math.PI * 2
-    const radius = 0.8 + Math.random() * 0.3
-    particlePositions[i * 3] = Math.cos(angle) * radius
-    particlePositions[i * 3 + 1] = Math.random() * 2 - 0.5
-    particlePositions[i * 3 + 2] = Math.sin(angle) * radius
-  }
-
-  const particleGeometry = new THREE.BufferGeometry()
-  particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3))
 
   return (
     <group position={position}>
@@ -120,15 +136,7 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
       </mesh>
 
       {/* Ember particles */}
-      <points ref={particlesRef}>
-        <bufferGeometry attach="geometry">
-          <bufferAttribute
-            attach="attributes-position"
-            count={particleCount}
-            array={particlePositions}
-            itemSize={3}
-          />
-        </bufferGeometry>
+      <points ref={particlesRef} geometry={particleGeometry}>
         <pointsMaterial
           size={0.05}
           color={stacks === 3 ? '#ff0000' : stacks === 2 ? '#ff4500' : '#ff6600'}

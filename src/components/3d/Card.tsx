@@ -5,6 +5,7 @@ import { Html } from '@react-three/drei'
 import { useCard, useSelection, useGamePhase, useCurrentTurn } from '@/stores/optimizedGameStore'
 import { CardData } from '@/stores/cardStore'
 import { FireAuraEffect } from './FireAuraEffect'
+import { DamageNumbers } from './DamageNumbers'
 
 interface CardProps {
   card: CardData
@@ -226,6 +227,13 @@ export function Card({ card: initialCard, position, side, index }: CardProps) {
       {hasFireAura && fireAuraStacks > 0 && !isDead && (
         <FireAuraEffect stacks={fireAuraStacks} />
       )}
+
+      {/* Damage Numbers - Always active to show damage/healing */}
+      <DamageNumbers
+        card={initialCard}
+        position={[0, 0, 0]}
+        side={side}
+      />
     </group>
   )
 }

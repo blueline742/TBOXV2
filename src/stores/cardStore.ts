@@ -91,7 +91,7 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     maxHp: 60,
     texture: '/archwizardnft.png',
     abilities: [
-      { name: 'Heal Wave', description: 'Heal single ally', heal: 35, targetType: 'single' },
+      { name: 'Battery Drain', description: 'Leech 20 HP from all enemies and redistribute to allies', targetType: 'all', effect: 'battery_drain' },
       { name: 'Fire Aura', description: 'Burn all enemies (5 dmg/turn, stacks 3x)', effect: 'burn', targetType: 'all' },
       { name: 'Holy Light', description: 'Damage undead', damage: 30, targetType: 'single' }
     ]
