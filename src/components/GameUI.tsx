@@ -11,6 +11,7 @@ import useOptimizedGameStore, {
   useCombatLog
 } from '@/stores/optimizedGameStore'
 import useCardStore from '@/stores/cardStore'
+import useMultiplayerStore from '@/stores/multiplayerStore'
 import { executeAbility, applyAbilityEffects } from '@/utils/abilityLogic'
 import { CombatLog } from './CombatLog'
 
@@ -58,13 +59,17 @@ export function GameUI() {
     : null
 
   const { availableCards, initializeCards } = useCardStore()
+  const { connectionStatus, endTurn: multiplayerEndTurn, selectTarget: multiplayerSelectTarget } = useMultiplayerStore()
 
   useEffect(() => {
     initializeCards()
-  }, [])
+  }, [initializeCards])
 
-  // Initialize game and randomly select starting player
+  // Initialize game and randomly select starting player (SINGLE PLAYER ONLY)
   useEffect(() => {
+    // Skip if in multiplayer mode
+    if (connectionStatus === 'in_game' || connectionStatus === 'connected') return
+
     if (availableCards.length > 0 && phase === 'setup') {
       const shuffled = [...availableCards].sort(() => Math.random() - 0.5)
       const playerDeck = shuffled.slice(0, 4).map((card, i) => ({
@@ -88,7 +93,7 @@ export function GameUI() {
 
       setGameMessage(`${startingPlayer === 'player' ? 'Your' : "Opponent's"} turn starts!`)
     }
-  }, [availableCards, phase, setCurrentTurn, setGameMessage, store])
+  }, [availableCards, phase, setCurrentTurn, setGameMessage, store, connectionStatus])
 
   // Listen for AI action completion
   useEffect(() => {
@@ -100,8 +105,11 @@ export function GameUI() {
     return () => window.removeEventListener('aiActionComplete' as any, handleAIActionComplete)
   }, [setGameMessage])
 
-  // Auto-select card and ability at the start of each turn (PLAYER ONLY)
+  // Auto-select card and ability at the start of each turn (SINGLE PLAYER ONLY)
   useEffect(() => {
+    // Skip if in multiplayer - server handles card selection
+    if (connectionStatus === 'in_game') return
+
     // Only auto-select for player turns - let GameScene handle AI turns
     if (phase === 'player_turn' && !autoSelectedCardId) {
       // Add a small delay to prevent rapid cycling when turns switch
@@ -139,7 +147,7 @@ export function GameUI() {
 
       return () => clearTimeout(selectionTimer)
     }
-  }, [phase, autoSelectedCardId, playerCards,
+  }, [phase, autoSelectedCardId, playerCards, connectionStatus,
       setAutoSelectedCard, setAutoSelectedAbility, setWaitingForTarget, setGameMessage])
 
   // Auto-select target for opponent
@@ -180,10 +188,17 @@ export function GameUI() {
   // Execute ability when target is selected (for both player and opponent)
   useEffect(() => {
     if (targetCardId && isWaitingForTarget && currentTurn === 'player') {
-      executeAutoSelectedAbility(targetCardId)
-      setWaitingForTarget(false)
+      // In multiplayer, send to server; in single player, execute locally
+      if (connectionStatus === 'in_game') {
+        multiplayerSelectTarget(targetCardId)
+        setWaitingForTarget(false)
+        selectTarget(null) // Clear selection
+      } else {
+        executeAutoSelectedAbility(targetCardId)
+        setWaitingForTarget(false)
+      }
     }
-  }, [targetCardId, isWaitingForTarget, currentTurn, setWaitingForTarget])
+  }, [targetCardId, isWaitingForTarget, currentTurn, setWaitingForTarget, connectionStatus, multiplayerSelectTarget, selectTarget])
 
   const executeAutoSelectedAbility = (targetId: string) => {
     if (!autoSelectedCard || autoSelectedAbilityIndex === null) return
@@ -264,7 +279,7 @@ export function GameUI() {
         }
 
         const effectData: SpellEffectData = {
-          id: `effect-${Date.now()}`,
+          id: `effect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: effectType,
           position: sourcePos,
           targetId: targetCard?.id || '',
@@ -372,20 +387,29 @@ export function GameUI() {
         </div>
       )}
 
-      {/* End Turn Button - Bottom Center */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto">
-        <button
-          onClick={() => endTurn()}
-          className={`px-8 py-3 text-white font-bold rounded-full shadow-2xl transition-all transform hover:scale-110 ${
-            currentTurn === 'player'
-              ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
-              : 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
-          } ${phase === 'animating' || phase === 'game_over' ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={phase === 'animating' || phase === 'game_over'}
-        >
-          {currentTurn === 'player' ? 'End Turn' : 'End Opponent Turn'}
-        </button>
-      </div>
+      {/* End Turn Button - Bottom Center (Only show for current player in multiplayer) */}
+      {(connectionStatus !== 'in_game' || currentTurn === 'player') && (
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto">
+          <button
+            onClick={() => {
+              // Use multiplayer end turn if in game, otherwise local
+              if (connectionStatus === 'in_game') {
+                multiplayerEndTurn()
+              } else {
+                endTurn()
+              }
+            }}
+            className={`px-8 py-3 text-white font-bold rounded-full shadow-2xl transition-all transform hover:scale-110 ${
+              currentTurn === 'player'
+                ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
+                : 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
+            } ${phase === 'animating' || phase === 'game_over' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={phase === 'animating' || phase === 'game_over'}
+          >
+            {currentTurn === 'player' ? 'End Turn' : 'End Opponent Turn'}
+          </button>
+        </div>
+      )}
 
       {/* Responsive styles */}
       <style jsx>{`

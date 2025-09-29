@@ -17,6 +17,9 @@ export function SpellEffect({ type, position, targetPosition, duration = 1.5, on
   const startTime = useRef<number | null>(null)
   const lightRef = useRef<THREE.PointLight>(null)
 
+  // Default position if undefined
+  const safePosition = position || [0, 0, 0] as [number, number, number]
+
   // Set start time on mount
   useEffect(() => {
     startTime.current = Date.now()
@@ -33,9 +36,9 @@ export function SpellEffect({ type, position, targetPosition, duration = 1.5, on
       if (type === 'fire') {
         const angle = (Math.PI * 2 * i) / particleCount
         const radius = Math.random() * 0.1 // Tight burst
-        pos[i3] = position[0] + Math.cos(angle) * radius
-        pos[i3 + 1] = position[1] + 0.5 // Exact card height
-        pos[i3 + 2] = position[2] + Math.sin(angle) * radius
+        pos[i3] = safePosition[0] + Math.cos(angle) * radius
+        pos[i3 + 1] = safePosition[1] + 0.5 // Exact card height
+        pos[i3 + 2] = safePosition[2] + Math.sin(angle) * radius
       } else if (type === 'freeze') {
         const angle = (Math.PI * 2 * i) / particleCount
         const radius = Math.random() * 2
@@ -50,7 +53,7 @@ export function SpellEffect({ type, position, targetPosition, duration = 1.5, on
     }
 
     return { initialPositions: pos }
-  }, [type, particleCount, position, targetPosition])
+  }, [type, particleCount, safePosition, targetPosition])
 
   const shaderMaterial = useMemo(() => {
     if (type === 'freeze') {
@@ -174,7 +177,7 @@ export function SpellEffect({ type, position, targetPosition, duration = 1.5, on
       </instancedMesh>
 
       {type === 'freeze' && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={position}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={safePosition}>
           <ringGeometry args={[0.5, 3, 32]} />
           <meshBasicMaterial color="#00aaff" opacity={0.3} transparent />
         </mesh>
@@ -182,8 +185,8 @@ export function SpellEffect({ type, position, targetPosition, duration = 1.5, on
 
       {type === 'fire' && (
         <>
-          <pointLight ref={lightRef} color="#ff6600" intensity={5} distance={10} position={position} />
-          <mesh position={position}>
+          <pointLight ref={lightRef} color="#ff6600" intensity={5} distance={10} position={safePosition} />
+          <mesh position={safePosition}>
             <sphereGeometry args={[0.4, 16, 16]} />
             <meshBasicMaterial
               color="#ffaa00"

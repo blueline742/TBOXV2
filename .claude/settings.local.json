@@ -21,7 +21,13 @@
       "Bash(dir:*)",
       "Bash(cmd /c:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(git commit -m \"$(cat <<''EOF''\nAdd Spirit Shaman character with unique abilities\n\n- Implemented new Spirit Shaman card with 75 HP\n- Added Resurrection ability to revive fallen allies with 50% HP\n- Added Spell Echo ability to copy and use enemy''s last spell\n- Added Healing Totem for group healing (25 HP to all allies)\n- Updated ability system to support ''revive'' and ''spell_steal'' effects\n- Fixed TypeScript errors in abilityLogic.ts\n- Added comprehensive guide (ADDING_NEW_CARDS_GUIDE.md) for future development\n- Includes placeholder image for Spirit Shaman character\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd Spirit Shaman character with unique abilities\n\n- Implemented new Spirit Shaman card with 75 HP\n- Added Resurrection ability to revive fallen allies with 50% HP\n- Added Spell Echo ability to copy and use enemy''s last spell\n- Added Healing Totem for group healing (25 HP to all allies)\n- Updated ability system to support ''revive'' and ''spell_steal'' effects\n- Fixed TypeScript errors in abilityLogic.ts\n- Added comprehensive guide (ADDING_NEW_CARDS_GUIDE.md) for future development\n- Includes placeholder image for Spirit Shaman character\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMajor game enhancements and bug fixes\n\n- Fixed Fire Aura buffer attribute error with stable geometry allocation\n- Added fisheye.png skybox background for immersive environment\n- Implemented damage numbers with speech bubble design\n- Redesigned table with toybox theme using instanced meshes\n- Improved scene lighting with natural room atmosphere\n- Added VFX components for Battery Drain and Ice Nova effects\n- Optimized performance using instanced meshes for decorations\n- Enhanced visual feedback with floating damage/heal indicators\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Read(//c/Users/samta/OneDrive/Pictures/Screenshots/**)",
+      "Bash(git commit:*)",
+      "Bash(node:*)",
+      "WebSearch",
+      "WebFetch(domain:socket.io)"
     ],
     "deny": [],
     "ask": []

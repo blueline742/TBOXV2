@@ -44,15 +44,22 @@ export function GameScene() {
       const effectData = event.detail
       console.log('[GAMESCENE DEBUG] Received spell effect:', effectData)
 
-      setActiveEffects(prev => [...prev, {
-        id: effectData.id,
-        type: effectData.type,
-        position: effectData.position,
-        sourcePosition: effectData.sourcePosition,
-        targetPosition: effectData.targetPosition,
-        enemyPositions: effectData.enemyPositions,
-        allyPositions: effectData.allyPositions
-      }])
+      setActiveEffects(prev => {
+        // Check if effect with this ID already exists
+        if (prev.some(e => e.id === effectData.id)) {
+          console.log('[GAMESCENE DEBUG] Effect already exists, skipping:', effectData.id)
+          return prev
+        }
+        return [...prev, {
+          id: effectData.id,
+          type: effectData.type,
+          position: effectData.position,
+          sourcePosition: effectData.sourcePosition,
+          targetPosition: effectData.targetPosition,
+          enemyPositions: effectData.enemyPositions,
+          allyPositions: effectData.allyPositions
+        }]
+      })
 
       // Auto-remove effect after duration
       const duration = 2000
@@ -108,7 +115,7 @@ export function GameScene() {
                 const allyPos = opponentCards.map(c => c.position || [0, 0, 0]) as [number, number, number][]
 
                 setActiveEffects(prev => [...prev, {
-                  id: `effect-${Date.now()}`,
+                  id: `effect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                   type: effectType,
                   position: sourcePosition,
                   sourcePosition: sourcePosition,
@@ -117,7 +124,7 @@ export function GameScene() {
                 }])
               } else {
                 setActiveEffects(prev => [...prev, {
-                  id: `effect-${Date.now()}`,
+                  id: `effect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                   type: effectType,
                   position: sourcePosition,
                   sourcePosition: sourcePosition,
@@ -242,46 +249,56 @@ export function GameScene() {
 
         <VFXSystem />
 
-        {activeEffects.map(effect => (
-          effect.type === 'battery_drain' ? (
-            <VFXBatteryDrain
-              key={effect.id}
-              sourcePosition={effect.sourcePosition || effect.position}
-              enemyPositions={effect.enemyPositions || []}
-              allyPositions={effect.allyPositions || []}
-              onComplete={() => removeEffect(effect.id)}
-            />
-          ) : effect.type === 'ice_nova' ? (
-            <VFXIceNova
-              key={effect.id}
-              position={effect.position}
-              onComplete={() => removeEffect(effect.id)}
-            />
-          ) : effect.type === 'fireball' ? (
-            <VFXFireball
-              key={effect.id}
-              position={effect.sourcePosition || effect.position}
-              target={effect.targetPosition || [0, 0, -2]}
-              onComplete={() => removeEffect(effect.id)}
-            />
-          ) : effect.type === 'lightning' || effect.type === 'chain_lightning' ? (
-            <VFXLightning
-              key={effect.id}
-              startPosition={effect.sourcePosition || effect.position}
-              endPosition={effect.targetPosition || [0, 0, -2]}
-              onComplete={() => removeEffect(effect.id)}
-            />
-          ) : (
-            <SpellEffect
-              key={effect.id}
-              type={effect.type as 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison'}
-              position={effect.position}
-              targetPosition={effect.targetPosition}
-              duration={2}
-              onComplete={() => removeEffect(effect.id)}
-            />
-          )
-        ))}
+        {activeEffects.map(effect => {
+          if (effect.type === 'battery_drain') {
+            return (
+              <VFXBatteryDrain
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                enemyPositions={effect.enemyPositions || []}
+                allyPositions={effect.allyPositions || []}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'ice_nova') {
+            return (
+              <VFXIceNova
+                key={effect.id}
+                position={effect.position}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'fireball') {
+            return (
+              <VFXFireball
+                key={effect.id}
+                position={effect.sourcePosition || effect.position}
+                target={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'lightning' || effect.type === 'chain_lightning') {
+            return (
+              <VFXLightning
+                key={effect.id}
+                startPosition={effect.sourcePosition || effect.position}
+                endPosition={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else {
+            return (
+              <SpellEffect
+                key={effect.id}
+                type={effect.type as 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison'}
+                position={effect.position}
+                targetPosition={effect.targetPosition}
+                duration={2}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          }
+        })}
       </Suspense>
     </Canvas>
   )

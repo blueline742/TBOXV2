@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import { GameUI } from '@/components/GameUI'
+import { WalletConnect } from '@/components/WalletConnect'
+import { MultiplayerLobby } from '@/components/MultiplayerLobby'
 
 const GameScene = dynamic(() => import('@/components/GameScene').then(mod => mod.GameScene), {
   ssr: false,
@@ -17,6 +19,8 @@ export default function Home() {
     <main className="w-full h-screen relative bg-gradient-to-b from-blue-900 to-purple-900">
       <GameScene />
       <GameUI />
+      <WalletConnect />
+      <MultiplayerLobby />
     </main>
   )
 }
