@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { useEffect } from 'react'
 
 export function Skybox() {
-  const texture = useLoader(THREE.TextureLoader, '/fisheye.png')
+  const texture = useLoader(THREE.TextureLoader, '/fisheye.webp')
 
   useEffect(() => {
     // Configure texture for spherical mapping

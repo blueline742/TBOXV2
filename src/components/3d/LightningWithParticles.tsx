@@ -51,7 +51,7 @@ export function LightningWithParticles({
   const particlesRef = useRef<THREE.Points>(null)
   const currentTargetIndex = useRef(0)
 
-  console.log('[LIGHTNING WITH PARTICLES] Created:', { startPosition, targetPositions, isChain })
+  // console.log('[LIGHTNING WITH PARTICLES] Created:', { startPosition, targetPositions, isChain })
 
   // Generate lightning bolts
   const lightningPaths = useMemo(() => {
@@ -167,7 +167,7 @@ export function LightningWithParticles({
 
     if (progress >= 1) {
       if (onComplete) {
-        console.log('[LIGHTNING WITH PARTICLES] Complete')
+        // console.log('[LIGHTNING WITH PARTICLES] Complete')
         onComplete()
       }
     }

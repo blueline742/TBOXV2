@@ -25,7 +25,7 @@ const toyCards = [
   {
     name: 'Toy Wizard',
     maxHp: 80,
-    texture: '/wizardnft.png',
+    texture: '/wizardnft.webp',
     abilities: [
       { name: 'Ice Nova', description: 'Freeze all enemies', effect: 'freeze', targetType: 'all' },
       { name: 'Pyroblast', description: 'Heavy fire damage (35 HP)', damage: 35, targetType: 'single' },
@@ -35,7 +35,7 @@ const toyCards = [
   {
     name: 'Robot',
     maxHp: 120,
-    texture: '/robotnft.png',
+    texture: '/robotnft.webp',
     abilities: [
       { name: 'Laser Beam', description: 'High damage', damage: 30, targetType: 'single' },
       { name: 'Shield Mode', description: 'Shield self', effect: 'shield', targetType: 'self' },
@@ -45,7 +45,7 @@ const toyCards = [
   {
     name: 'Dino',
     maxHp: 100,
-    texture: '/dinonft.png',
+    texture: '/dinonft.webp',
     abilities: [
       { name: 'Fire Breath', description: 'Burn single target', damage: 25, effect: 'burn', targetType: 'single' },
       { name: 'Wing Buffet', description: 'Damage all', damage: 20, targetType: 'all' },
@@ -55,7 +55,7 @@ const toyCards = [
   {
     name: 'Brick Dude',
     maxHp: 110,
-    texture: '/brickdudenft.png',
+    texture: '/brickdudenft.webp',
     abilities: [
       { name: 'Sword Strike', description: 'Basic attack', damage: 25, targetType: 'single' },
       { name: 'Shield Bash', description: 'Damage and stun', damage: 15, effect: 'stun', targetType: 'single' },
@@ -65,7 +65,7 @@ const toyCards = [
   {
     name: 'Duckie',
     maxHp: 70,
-    texture: '/duckienft.png',
+    texture: '/duckienft.webp',
     abilities: [
       { name: 'Shadow Strike', description: 'High damage', damage: 40, targetType: 'single' },
       { name: 'Smoke Bomb', description: 'Stun all enemies', effect: 'stun', targetType: 'all' },
@@ -75,17 +75,17 @@ const toyCards = [
   {
     name: 'Arch Wizard',
     maxHp: 60,
-    texture: '/archwizardnft.png',
+    texture: '/archwizardnft.webp',
     abilities: [
-      { name: 'Battery Drain', description: 'Leech 20 HP from all enemies', targetType: 'all', effect: 'battery_drain' },
+      { name: 'Chaos Shuffle', description: 'Transform all enemy cards into random ones', targetType: 'all', effect: 'chaos_shuffle', cooldown: 5 },
       { name: 'Fire Aura', description: 'Burn all enemies', effect: 'burn', targetType: 'all' },
-      { name: 'Holy Light', description: 'Damage undead', damage: 30, targetType: 'single' }
+      { name: 'Battery Drain', description: 'Leech 20 HP from all enemies', targetType: 'all', effect: 'battery_drain' }
     ]
   },
   {
     name: 'Voodoo',
     maxHp: 90,
-    texture: '/voodoonft.png',
+    texture: '/voodoonft.webp',
     abilities: [
       { name: 'Cannon Blast', description: 'Area damage', damage: 25, targetType: 'all' },
       { name: 'Cutlass Slash', description: 'Single target', damage: 30, targetType: 'single' },
@@ -95,21 +95,11 @@ const toyCards = [
   {
     name: 'Wind-up Toy',
     maxHp: 85,
-    texture: '/winduptoynft.png',
+    texture: '/winduptoynft.webp',
     abilities: [
       { name: 'Ray Gun', description: 'Laser damage', damage: 28, targetType: 'single' },
       { name: 'Mind Control', description: 'Stun target', effect: 'stun', targetType: 'single' },
       { name: 'Probe', description: 'Damage over time', damage: 10, effect: 'poison', targetType: 'single' }
-    ]
-  },
-  {
-    name: 'Spirit Shaman',
-    maxHp: 75,
-    texture: '/shamannft.png',
-    abilities: [
-      { name: 'Resurrection', description: 'Revive a fallen ally', effect: 'revive', targetType: 'single' },
-      { name: 'Healing Totem', description: 'Heal all allies', heal: 25, targetType: 'allies' },
-      { name: 'Spell Echo', description: 'Copy last enemy spell', effect: 'spell_steal', targetType: 'single' }
     ]
   }
 ]
@@ -137,11 +127,11 @@ function initializePlayerCards(isPlayer1) {
 }
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id)
+  // console.log('User connected:', socket.id)
 
   // Handle authentication
   socket.on('authenticate', ({ wallet }) => {
-    console.log('User authenticated:', wallet)
+    // console.log('User authenticated:', wallet)
     playerSockets.set(wallet, socket.id)
     socket.wallet = wallet
 
@@ -180,7 +170,7 @@ io.on('connection', (socket) => {
     socket.roomId = roomId
 
     socket.emit('room:update', room)
-    console.log('Room created:', roomId)
+    // console.log('Room created:', roomId)
   })
 
   // Join a room
@@ -248,7 +238,7 @@ io.on('connection', (socket) => {
       socket.roomId = roomId
 
       socket.emit('room:update', room)
-      console.log('Room created via matchmaking:', roomId)
+      // console.log('Room created via matchmaking:', roomId)
     }
   })
 
@@ -322,7 +312,7 @@ io.on('connection', (socket) => {
             // Apply debuff damage (burn, poison, etc.)
             if (debuff.damage && card.hp > 0) {
               card.hp = Math.max(0, card.hp - debuff.damage)
-              console.log(`${card.name} takes ${debuff.damage} ${debuff.type} damage`)
+              // console.log(`${card.name} takes ${debuff.damage} ${debuff.type} damage`)
             }
 
             // Reduce duration
@@ -330,7 +320,7 @@ io.on('connection', (socket) => {
 
             // Remove if duration expired
             if (debuff.duration <= 0) {
-              console.log(`${card.name}'s ${debuff.type} has expired`)
+              // console.log(`${card.name}'s ${debuff.type} has expired`)
               return false
             }
             return true
@@ -351,7 +341,7 @@ io.on('connection', (socket) => {
             // Apply debuff damage (burn, poison, etc.)
             if (debuff.damage && card.hp > 0) {
               card.hp = Math.max(0, card.hp - debuff.damage)
-              console.log(`${card.name} takes ${debuff.damage} ${debuff.type} damage`)
+              // console.log(`${card.name} takes ${debuff.damage} ${debuff.type} damage`)
             }
 
             // Reduce duration
@@ -359,7 +349,7 @@ io.on('connection', (socket) => {
 
             // Remove if duration expired
             if (debuff.duration <= 0) {
-              console.log(`${card.name}'s ${debuff.type} has expired`)
+              // console.log(`${card.name}'s ${debuff.type} has expired`)
               return false
             }
             return true
@@ -389,7 +379,7 @@ io.on('connection', (socket) => {
 
   // Disconnect handling
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id)
+    // console.log('User disconnected:', socket.id)
 
     if (socket.wallet) {
       playerSockets.delete(socket.wallet)
@@ -429,7 +419,7 @@ function startGame(roomId) {
   })
 
   io.to(roomId).emit('room:update', room)
-  console.log('Game started:', roomId)
+  // console.log('Game started:', roomId)
 }
 
 // Select random card and ability
@@ -477,21 +467,21 @@ function executeAbility(room, playerRole, targetId) {
 
   const caster = cards.find(c => c.id === selectedCardId)
   if (!caster || caster.hp <= 0) {
-    console.log('Caster not found or dead:', selectedCardId)
+    // console.log('Caster not found or dead:', selectedCardId)
     return
   }
 
   const ability = caster.abilities[abilityIndex]
   if (!ability) {
-    console.log('Ability not found:', abilityIndex)
+    // console.log('Ability not found:', abilityIndex)
     return
   }
 
-  console.log(`${playerRole} executing ${ability.name} with ${caster.name} on target ${targetId}`)
+  // console.log(`${playerRole} executing ${ability.name} with ${caster.name} on target ${targetId}`)
 
   // Check if caster is stunned or frozen
   if (caster.debuffs.some(d => d.type === 'stunned' || d.type === 'frozen')) {
-    console.log('Caster is stunned or frozen, cannot act')
+    // console.log('Caster is stunned or frozen, cannot act')
     return
   }
 
@@ -524,7 +514,32 @@ function executeAbility(room, playerRole, targetId) {
   }
 
   // Special abilities
-  if (ability.effect === 'battery_drain') {
+  if (ability.effect === 'chaos_shuffle') {
+    // Transform all enemy cards into random ones
+    const shuffledCards = [...toyCards].sort(() => Math.random() - 0.5)
+
+    opponentCards.forEach((card, index) => {
+      if (card.hp > 0) { // Only transform alive cards
+        const newTemplate = shuffledCards[index % shuffledCards.length]
+
+        // Calculate HP percentage to maintain
+        const hpPercentage = card.hp / card.maxHp
+
+        // Transform the card
+        card.name = newTemplate.name
+        card.texture = newTemplate.texture
+        card.abilities = newTemplate.abilities.map(ability => ({
+          ...ability,
+          currentCooldown: 0
+        }))
+        card.maxHp = newTemplate.maxHp
+        card.hp = Math.max(1, Math.floor(newTemplate.maxHp * hpPercentage)) // Maintain HP percentage
+        card.debuffs = [] // Clear all debuffs
+      }
+    })
+
+    message = `${caster.name} casts Chaos Shuffle! All enemy cards have been transformed!`
+  } else if (ability.effect === 'battery_drain') {
     // Drain 20 HP from all enemies and distribute to allies
     let totalDrained = 0
     opponentCards.filter(c => c.hp > 0).forEach(enemy => {
@@ -595,16 +610,34 @@ function executeAbility(room, playerRole, targetId) {
     else if (ability.name === 'Lightning Zap') effectType = 'lightning'
     else if (ability.name === 'Ice Nova') effectType = 'ice_nova'
     else if (ability.name === 'Battery Drain') effectType = 'battery_drain'
+    else if (ability.name === 'Chaos Shuffle') effectType = 'chaos_shuffle'
+    else if (ability.name === 'Sword Strike') effectType = 'sword_strike'
+
+    const targetPositionsList = targets.map(t => {
+      const isOpponent = opponentCards.some(c => c.id === t.id)
+      const targetCards = isOpponent ? opponentCards : cards
+      const index = targetCards.findIndex(c => c.id === t.id)
+      return [(-3 + index * 2), 0.5, isOpponent ? (playerRole === 'player1' ? -2 : 2) : (playerRole === 'player1' ? 2 : -2)]
+    })
 
     visualEffect = {
       type: effectType,
       sourcePosition: sourcePos,
-      targetPositions: targets.map(t => {
-        const isOpponent = opponentCards.some(c => c.id === t.id)
-        const targetCards = isOpponent ? opponentCards : cards
-        const index = targetCards.findIndex(c => c.id === t.id)
-        return [(-3 + index * 2), 0.5, isOpponent ? (playerRole === 'player1' ? -2 : 2) : (playerRole === 'player1' ? 2 : -2)]
+      targetPosition: targetPositionsList[0], // Single target position
+      targetPositions: targetPositionsList // All target positions for multi-target
+    }
+
+    // For Battery Drain and Chaos Shuffle, add enemy and ally positions
+    if (effectType === 'battery_drain' || effectType === 'chaos_shuffle') {
+      visualEffect.enemyPositions = opponentCards.filter(c => c.hp > 0).map((card, i) => {
+        return [(-3 + i * 2), 0.5, playerRole === 'player1' ? -2 : 2]
       })
+
+      if (effectType === 'battery_drain') {
+        visualEffect.allyPositions = cards.filter(c => c.hp > 0).map((card, i) => {
+          return [(-3 + i * 2), 0.5, playerRole === 'player1' ? 2 : -2]
+        })
+      }
     }
   }
 

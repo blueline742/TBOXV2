@@ -50,7 +50,7 @@ export function LightningEffect({
   const lightRef = useRef<THREE.PointLight>(null)
   const currentTargetIndex = useRef(0)
 
-  console.log('[LIGHTNING] Created:', { startPosition, targetPositions, isChain })
+  // console.log('[LIGHTNING] Created:', { startPosition, targetPositions, isChain })
 
   // Generate lightning bolts
   const lightningPaths = useMemo(() => {
@@ -100,7 +100,7 @@ export function LightningEffect({
 
     if (progress >= 1) {
       if (onComplete) {
-        console.log('[LIGHTNING] Complete')
+        // console.log('[LIGHTNING] Complete')
         onComplete()
       }
     }

@@ -42,7 +42,7 @@ export function Card({ card: initialCard, position, side, index }: CardProps) {
     if (card.hp < previousHp) {
       // Damage taken
       setDamageFlash(true)
-      console.log(`[CARD DEBUG] ${card.name} took ${previousHp - card.hp} damage`)
+      // console.log(`[CARD DEBUG] ${card.name} took ${previousHp - card.hp} damage`)
       setTimeout(() => setDamageFlash(false), 500)
     } else if (card.hp > previousHp) {
       // Healing received
@@ -56,7 +56,7 @@ export function Card({ card: initialCard, position, side, index }: CardProps) {
   const canBeTargeted = phase === 'player_turn' && side === 'opponent' && !isDead
 
   // Load the actual card texture
-  const texture = useLoader(TextureLoader, card.texture || '/wizardnft.png')
+  const texture = useLoader(TextureLoader, card.texture || '/wizardnft.webp')
 
   useFrame((state) => {
     if (!meshRef.current) return

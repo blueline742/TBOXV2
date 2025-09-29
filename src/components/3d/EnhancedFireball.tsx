@@ -27,7 +27,7 @@ export function EnhancedFireball({
   const shockwaveRef = useRef<THREE.Mesh>(null)
   const hasExploded = useRef(false)
 
-  console.log('[ENHANCED FIREBALL] Created:', { startPosition, targetPosition })
+  // console.log('[ENHANCED FIREBALL] Created:', { startPosition, targetPosition })
 
   // Generate fire particle positions (small flames around the fireball)
   const fireParticlePositions = useMemo(() => {
@@ -170,7 +170,7 @@ export function EnhancedFireball({
     // Trigger explosion at the end
     if (progress >= 0.9 && !hasExploded.current) {
       hasExploded.current = true
-      console.log('[ENHANCED FIREBALL] Exploding!')
+      // console.log('[ENHANCED FIREBALL] Exploding!')
     }
 
     // Animate explosion particles
@@ -248,7 +248,7 @@ export function EnhancedFireball({
 
     if (progress >= 1) {
       if (onComplete) {
-        console.log('[ENHANCED FIREBALL] Complete')
+        // console.log('[ENHANCED FIREBALL] Complete')
         onComplete()
       }
     }

@@ -18,7 +18,7 @@ export function Fireball({ startPosition, targetPosition, onComplete, duration =
   const [exploded, setExploded] = useState(false)
 
   // Debug positions
-  console.log('[FIREBALL DEBUG] Start:', startPosition, 'Target:', targetPosition)
+  // console.log('[FIREBALL DEBUG] Start:', startPosition, 'Target:', targetPosition)
 
   // Trail particles setup
   const trailCount = 30

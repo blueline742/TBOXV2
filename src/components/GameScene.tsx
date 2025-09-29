@@ -13,6 +13,8 @@ import { VFXFireball } from './3d/VFXFireball'
 import { VFXLightning } from './3d/VFXLightning'
 import { VFXIceNova } from './3d/VFXIceNova'
 import { VFXBatteryDrain } from './3d/VFXBatteryDrain'
+import { VFXChaosShuffle } from './3d/VFXChaosShuffle'
+import { VFXSwordStrike } from './3d/VFXSwordStrike'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
@@ -42,12 +44,12 @@ export function GameScene() {
   useEffect(() => {
     const handleSpellEffect = (event: CustomEvent<SpellEffectData>) => {
       const effectData = event.detail
-      console.log('[GAMESCENE DEBUG] Received spell effect:', effectData)
+      // console.log('[GAMESCENE DEBUG] Received spell effect:', effectData)
 
       setActiveEffects(prev => {
         // Check if effect with this ID already exists
         if (prev.some(e => e.id === effectData.id)) {
-          console.log('[GAMESCENE DEBUG] Effect already exists, skipping:', effectData.id)
+          // console.log('[GAMESCENE DEBUG] Effect already exists, skipping:', effectData.id)
           return prev
         }
         return [...prev, {
@@ -73,91 +75,18 @@ export function GameScene() {
   }, [])
 
   useEffect(() => {
+    // AI COMPLETELY DISABLED - opponent_turn phase exists but does nothing
     if (phase === 'opponent_turn') {
-      // Notify UI that opponent is thinking
+      // Just notify that it's opponent's turn, no AI action
       const thinkingEvent = new CustomEvent('aiActionComplete', {
-        detail: { message: "Opponent is thinking..." }
+        detail: { message: "Opponent's turn - waiting for action..." }
       })
       window.dispatchEvent(thinkingEvent)
-
-      const timer = setTimeout(() => {
-        const action = aiSelectAction(opponentCards, playerCards)
-
-        if (action) {
-          const sourceCard = opponentCards.find(c => c.id === action.cardId)
-          const targetCard = action.targetId
-            ? [...playerCards, ...opponentCards].find(c => c.id === action.targetId)
-            : null
-
-          if (sourceCard) {
-            const ability = sourceCard.abilities[action.abilityIndex]
-            const result = executeAbility(ability, sourceCard, targetCard || null, opponentCards, playerCards)
-
-            if (result.success) {
-              // Use visual effect from result or determine from ability
-              const effectType = result.visualEffect ||
-                                (ability.effect === 'freeze' ? 'freeze' :
-                                ability.effect === 'burn' ? 'fire' :
-                                ability.heal ? 'heal' :
-                                ability.damage && ability.damage >= 30 ? 'fire' :
-                                'fire')
-
-              const effectPosition: [number, number, number] = targetCard
-                ? [targetCard.position?.[0] || 0, 1, targetCard.position?.[2] || 0]
-                : [0, 1, 0]
-
-              const sourcePosition: [number, number, number] = sourceCard.position || [0, 1, 0]
-
-              // Special handling for Battery Drain effect
-              console.log('[GAMESCENE DEBUG] Effect type:', effectType, 'Result visual:', result.visualEffect)
-              if (effectType === 'battery_drain') {
-                const enemyPos = playerCards.map(c => c.position || [0, 0, 0]) as [number, number, number][]
-                const allyPos = opponentCards.map(c => c.position || [0, 0, 0]) as [number, number, number][]
-
-                setActiveEffects(prev => [...prev, {
-                  id: `effect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                  type: effectType,
-                  position: sourcePosition,
-                  sourcePosition: sourcePosition,
-                  enemyPositions: enemyPos,
-                  allyPositions: allyPos
-                }])
-              } else {
-                setActiveEffects(prev => [...prev, {
-                  id: `effect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                  type: effectType,
-                  position: sourcePosition,
-                  sourcePosition: sourcePosition,
-                  targetPosition: effectPosition
-                }])
-              }
-
-
-              applyAbilityEffects(result, useOptimizedGameStore.getState())
-
-              setTimeout(() => {
-                processDebuffDamage(useOptimizedGameStore.getState())
-                store.checkWinCondition()
-
-                // Set a message to indicate AI has finished its action
-                const gameUIEvent = new CustomEvent('aiActionComplete', {
-                  detail: { message: `${sourceCard.name} used ${ability.name}! Click End Opponent Turn to continue.` }
-                })
-                window.dispatchEvent(gameUIEvent)
-              }, 500)
-            }
-          }
-        }
-
-        // Don't automatically end turn - wait for manual button click
-      }, 1500)
-
-      return () => clearTimeout(timer)
     }
-  }, [phase, currentTurn])
+  }, [phase])
 
   const removeEffect = (id: string) => {
-    console.log('[GAMESCENE DEBUG] Removing effect:', id)
+    // console.log('[GAMESCENE DEBUG] Removing effect:', id)
     setActiveEffects(prev => prev.filter(e => e.id !== id))
   }
 
@@ -250,6 +179,7 @@ export function GameScene() {
         <VFXSystem />
 
         {activeEffects.map(effect => {
+          console.log('[GAMESCENE] Rendering effect type:', effect.type)
           if (effect.type === 'battery_drain') {
             return (
               <VFXBatteryDrain
@@ -257,6 +187,15 @@ export function GameScene() {
                 sourcePosition={effect.sourcePosition || effect.position}
                 enemyPositions={effect.enemyPositions || []}
                 allyPositions={effect.allyPositions || []}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'chaos_shuffle') {
+            return (
+              <VFXChaosShuffle
+                key={effect.id}
+                position={effect.position}
+                enemyPositions={effect.enemyPositions || []}
                 onComplete={() => removeEffect(effect.id)}
               />
             )
@@ -283,6 +222,15 @@ export function GameScene() {
                 key={effect.id}
                 startPosition={effect.sourcePosition || effect.position}
                 endPosition={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'sword_strike') {
+            return (
+              <VFXSwordStrike
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPosition={effect.targetPosition || [0, 0, -2]}
                 onComplete={() => removeEffect(effect.id)}
               />
             )

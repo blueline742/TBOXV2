@@ -84,7 +84,7 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
 
     // Socket event listeners
     socket.on('connect', () => {
-      console.log('Connected to game server')
+      // console.log('Connected to game server')
       set({ connectionStatus: 'connected' })
 
       // Authenticate with wallet
@@ -95,7 +95,7 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
     })
 
     socket.on('disconnect', () => {
-      console.log('Disconnected from game server')
+      // console.log('Disconnected from game server')
       set({ connectionStatus: 'disconnected' })
     })
 
@@ -120,12 +120,12 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
     })
 
     socket.on('game:cardSelected', (data) => {
-      console.log('Card selected:', data)
+      // console.log('Card selected:', data)
       // Handle card selection animation/UI update
     })
 
     socket.on('game:abilityExecuted', (data) => {
-      console.log('Ability executed:', data)
+      // console.log('Ability executed:', data)
       // Let the state sync handle the actual state update
       // This is just for triggering animations/effects
       const gameStore = useOptimizedGameStore.getState()
@@ -168,7 +168,7 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
     })
 
     socket.on('game:over', (data) => {
-      console.log('Game over:', data.winner)
+      // console.log('Game over:', data.winner)
       const gameStore = useOptimizedGameStore.getState()
       gameStore.setWinner(data.winner === get().playerRole ? 'player' : 'opponent')
     })
@@ -298,7 +298,7 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
     const { playerRole } = get()
     const gameStore = useOptimizedGameStore.getState()
 
-    console.log('Game starting with role:', playerRole, 'Data:', data)
+    // console.log('Game starting with role:', playerRole, 'Data:', data)
 
     // Clear any existing cards first
     gameStore.resetGame()
@@ -339,7 +339,7 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
     const gameStore = useOptimizedGameStore.getState()
     const { playerRole } = get()
 
-    console.log('State sync received:', gameState)
+    // console.log('State sync received:', gameState)
 
     // Fix card positions based on player perspective
     const fixCardPositions = (cards: any[], isPlayer: boolean) => {
@@ -409,7 +409,7 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
   },
 
   handleOpponentAction: (action) => {
-    console.log('Opponent action received:', action)
+    // console.log('Opponent action received:', action)
     // Handle opponent's actions (target selection, ability use, etc.)
     // This will trigger visual effects and state updates
   }

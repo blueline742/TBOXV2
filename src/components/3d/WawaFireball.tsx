@@ -19,7 +19,7 @@ export function WawaFireball({
   const groupRef = useRef<THREE.Group>(null)
   const startTime = useRef<number>(Date.now())
 
-  console.log('[WAWA FIREBALL] Created:', { startPosition, targetPosition })
+  // console.log('[WAWA FIREBALL] Created:', { startPosition, targetPosition })
 
   useFrame(() => {
     if (!groupRef.current) return
@@ -29,7 +29,7 @@ export function WawaFireball({
 
     if (progress >= 1) {
       if (onComplete) {
-        console.log('[WAWA FIREBALL] Complete')
+        // console.log('[WAWA FIREBALL] Complete')
         onComplete()
       }
       return

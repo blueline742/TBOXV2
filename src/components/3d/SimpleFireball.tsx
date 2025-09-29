@@ -20,7 +20,7 @@ export function SimpleFireball({
   const startTime = useRef<number>(Date.now())
   const trailRef = useRef<THREE.Mesh>(null)
 
-  console.log('[SIMPLE FIREBALL] Created:', { startPosition, targetPosition })
+  // console.log('[SIMPLE FIREBALL] Created:', { startPosition, targetPosition })
 
   useFrame(() => {
     if (!meshRef.current) return
@@ -30,7 +30,7 @@ export function SimpleFireball({
 
     if (progress >= 1) {
       if (onComplete) {
-        console.log('[SIMPLE FIREBALL] Complete')
+        // console.log('[SIMPLE FIREBALL] Complete')
         onComplete()
       }
       return

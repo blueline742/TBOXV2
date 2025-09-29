@@ -1,4 +1,4 @@
-import { CardData, Ability, Debuff } from '@/stores/cardStore'
+import { CardData, Ability, Debuff, toyCards } from '@/stores/cardStore'
 
 // Track last used enemy ability for spell steal
 let lastEnemyAbility: Ability | null = null
@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
@@ -77,7 +77,7 @@ export function executeAbility(
   // Special handling for Battery Drain ability
   if (ability.name === 'Battery Drain') {
     visualEffect = 'battery_drain'
-    console.log('[BATTERY DRAIN DEBUG] Ability detected:', ability.name, 'Visual effect set to:', visualEffect)
+    // console.log('[BATTERY DRAIN DEBUG] Ability detected:', ability.name, 'Visual effect set to:', visualEffect)
 
     // Calculate total HP to drain (20 per enemy)
     const enemyTargets = allOpponentCards.filter(card => card.hp > 0)
@@ -113,6 +113,49 @@ export function executeAbility(
     }
 
     // Return early for Battery Drain
+    return {
+      success: true,
+      message,
+      effects,
+      damages,
+      heals,
+      debuffs,
+      visualEffect
+    }
+  }
+
+  // Special handling for Chaos Shuffle ability
+  if (ability.effect === 'chaos_shuffle') {
+    visualEffect = 'chaos_shuffle'
+
+    // Get random cards from toyCards
+    const shuffledCards = [...toyCards].sort(() => Math.random() - 0.5)
+
+    // Transform each enemy card
+    allOpponentCards.forEach((card, index) => {
+      if (card.hp > 0) { // Only transform alive cards
+        const newTemplate = shuffledCards[index % shuffledCards.length]
+
+        // Calculate HP percentage to maintain
+        const hpPercentage = card.hp / card.maxHp
+
+        // Transform the card
+        card.name = newTemplate.name
+        card.texture = newTemplate.texture
+        card.abilities = newTemplate.abilities.map(ability => ({
+          ...ability,
+          currentCooldown: 0
+        }))
+        card.maxHp = newTemplate.maxHp
+        card.hp = Math.max(1, Math.floor(newTemplate.maxHp * hpPercentage)) // Maintain HP percentage, minimum 1
+        card.debuffs = [] // Clear all debuffs
+
+        effects.push({ type: 'effect', targetId: card.id })
+      }
+    })
+
+    message = `${sourceCard.name} casts Chaos Shuffle! All enemy cards have been transformed!`
+
     return {
       success: true,
       message,
@@ -203,7 +246,7 @@ export function executeAbility(
 
           // Debug logging for Ice Nova
           if (ability.name === 'Ice Nova') {
-            console.log('[ICE NOVA DEBUG] Applying freeze to:', target.name, 'Debuff:', debuff)
+            // console.log('[ICE NOVA DEBUG] Applying freeze to:', target.name, 'Debuff:', debuff)
             visualEffect = 'ice_nova'
           } else if (ability.effect === 'freeze') {
             visualEffect = 'freeze'
@@ -284,7 +327,7 @@ export function applyAbilityEffects(result: AbilityResult, store: any) {
 
   // Apply debuffs
   result.debuffs?.forEach(({ cardId, debuff, side }) => {
-    console.log('[DEBUG] Applying debuff:', debuff, 'to card:', cardId, 'side:', side)
+    // console.log('[DEBUG] Applying debuff:', debuff, 'to card:', cardId, 'side:', side)
     store.addDebuff(side, cardId, debuff)
   })
 }

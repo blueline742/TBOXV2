@@ -17,7 +17,7 @@ import { CombatLog } from './CombatLog'
 
 export interface SpellEffectData {
   id: string
-  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain'
+  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike'
   position: [number, number, number]
   targetId: string
   sourcePosition?: [number, number, number]
@@ -218,7 +218,8 @@ export function GameUI() {
       setGameMessage(result.message)
 
       // Create spell effect for visualization
-      if (result.visualEffect || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap') {
+      console.log('[GAMEUI DEBUG] Ability:', ability.name, 'Visual Effect:', result.visualEffect)
+      if (result.visualEffect || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain') {
         const sourceIndex = (currentTurn === 'player' ? playerCards : opponentCards).findIndex(c => c.id === autoSelectedCard.id)
         const sourceX = -3 + sourceIndex * 2
         const sourcePos: [number, number, number] = [sourceX, 0.5, currentTurn === 'player' ? 2 : -2]
@@ -246,36 +247,27 @@ export function GameUI() {
                           ability.name === 'Lightning Zap' ? 'lightning' :
                           result.visualEffect || 'fire'
 
-        // For Battery Drain, we need enemy and ally positions
+        console.log('[GAMEUI] Effect type:', effectType, 'Target positions:', targetPositions)
+
+        // For Chaos Shuffle and Battery Drain, calculate positions
         let enemyPositions: [number, number, number][] | undefined
         let allyPositions: [number, number, number][] | undefined
 
-        if (effectType === 'battery_drain') {
-          // Get actual enemy positions from cards
-          enemyPositions = opponentCards.filter(c => c.hp > 0).map((card) => {
-            // Use actual card positions if available, otherwise calculate
-            if (card.position) {
-              return card.position
-            }
-            const index = opponentCards.indexOf(card)
-            const adjustedIndex = index - Math.floor(opponentCards.length / 2)
-            return [-3 + adjustedIndex * 2, 0.5, -2] as [number, number, number]
-          })
+        if (effectType === 'battery_drain' || effectType === 'chaos_shuffle') {
+          // Enemy positions - reuse targetPositions from Lightning Zap logic (should already be set for 'all' targetType)
+          enemyPositions = targetPositions
 
-          // Get actual ally positions from cards
-          allyPositions = playerCards.filter(c => c.hp > 0).map((card) => {
-            // Use actual card positions if available, otherwise calculate
-            if (card.position) {
-              return card.position
-            }
-            const index = playerCards.indexOf(card)
-            const adjustedIndex = index - Math.floor(playerCards.length / 2)
-            return [-3 + adjustedIndex * 2, 0.5, 2] as [number, number, number]
-          })
+          // Ally positions - calculate for Battery Drain
+          if (effectType === 'battery_drain') {
+            const allies = currentTurn === 'player' ? playerCards : opponentCards
+            allyPositions = allies.filter(c => c.hp > 0).map((_, i) => {
+              const x = -3 + i * 2
+              return [x, 0.5, currentTurn === 'player' ? 2 : -2] as [number, number, number]
+            })
+          }
 
-          console.log('[BATTERY DRAIN] Enemy positions:', enemyPositions)
-          console.log('[BATTERY DRAIN] Ally positions:', allyPositions)
-          console.log('[BATTERY DRAIN] Source position:', sourcePos)
+          console.log('[VFX DEBUG] Enemy positions:', enemyPositions)
+          console.log('[VFX DEBUG] Ally positions:', allyPositions)
         }
 
         const effectData: SpellEffectData = {

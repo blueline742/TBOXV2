@@ -50,7 +50,7 @@ export function EnhancedLightning({
   const emitterRefs = useRef<any[]>([])
   const particleId = useMemo(() => `lightning-${Date.now()}`, [])
 
-  console.log('[ENHANCED LIGHTNING] Created:', { startPosition, targetPositions })
+  // console.log('[ENHANCED LIGHTNING] Created:', { startPosition, targetPositions })
 
   // Generate lightning bolts
   const lightningPaths = useMemo(() => {
@@ -77,7 +77,7 @@ export function EnhancedLightning({
     // Cleanup after duration
     const timer = setTimeout(() => {
       if (onComplete) {
-        console.log('[ENHANCED LIGHTNING] Complete')
+        // console.log('[ENHANCED LIGHTNING] Complete')
         onComplete()
       }
     }, duration * 1000)

@@ -31,6 +31,8 @@ function EnergyBeam({
   const [progress, setProgress] = useState(0)
   const startTime = useRef(Date.now() + delay * 1000)
 
+  console.log('[ENERGY BEAM] Created - Start:', start, 'End:', end, 'Color:', color)
+
   // Create curved path between points
   const curve = useMemo(() => {
     const startVec = new THREE.Vector3(...start)
@@ -163,6 +165,7 @@ export function VFXBatteryDrain({
   const groupRef = useRef<THREE.Group>(null)
 
   // Debug logging
+  console.log('[VFX BATTERY DRAIN] Phase:', phase)
   console.log('[VFX BATTERY DRAIN] Source:', sourcePosition)
   console.log('[VFX BATTERY DRAIN] Enemies:', enemyPositions)
   console.log('[VFX BATTERY DRAIN] Allies:', allyPositions)

@@ -23,7 +23,7 @@ function SpellEffectComponent({ type, position, targetPosition, duration = 1.5, 
   // Set start time on mount
   useEffect(() => {
     startTime.current = Date.now()
-    console.log('[SPELL EFFECT] Created at:', startTime.current, { type, position, targetPosition })
+    // console.log('[SPELL EFFECT] Created at:', startTime.current, { type, position, targetPosition })
   }, [])
 
   const particleCount = type === 'fire' ? 100 : type === 'freeze' ? 100 : 50
@@ -98,7 +98,7 @@ function SpellEffectComponent({ type, position, targetPosition, duration = 1.5, 
 
     if (progress >= 1) {
       if (onComplete) {
-        console.log('[EFFECT DEBUG] Fire effect complete after', elapsed, 'seconds')
+        // console.log('[EFFECT DEBUG] Fire effect complete after', elapsed, 'seconds')
         onComplete()
       }
       return
