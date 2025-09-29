@@ -1,7 +1,7 @@
 'use client';
 
 import React, { forwardRef } from 'react';
-import { VFXParticles, AppearanceMode } from 'wawa-vfx';
+import { VFXParticles, AppearanceMode, RenderMode } from 'wawa-vfx';
 import * as THREE from 'three';
 
 export interface VFXSystemRef {
@@ -13,7 +13,7 @@ export interface VFXSystemRef {
   emitBuff: (position: THREE.Vector3, color?: string) => void;
 }
 
-const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
+const VFXSystem = forwardRef<VFXSystemRef>(() => {
   // For now, we'll just set up the particle systems
   // The actual emission will be handled differently
 
@@ -27,7 +27,7 @@ const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
           gravity: [0, -2, 0],
           fadeSize: [0, 0.8],
           fadeAlpha: [0, 0.9],
-          renderMode: "billboard",
+          renderMode: RenderMode.Billboard,
           intensity: 5,
           appearance: AppearanceMode.Circular,
           easeFunction: "easeOutQuad",
@@ -42,7 +42,7 @@ const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
           gravity: [0, 1, 0],
           fadeSize: [0, 0.5],
           fadeAlpha: [0.2, 0.8],
-          renderMode: "billboard",
+          renderMode: RenderMode.Billboard,
           intensity: 1,
           appearance: AppearanceMode.Circular,
           easeFunction: "easeInOutQuad",
@@ -58,7 +58,7 @@ const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
           gravity: [0, 0, 0],
           fadeSize: [0, 0.9],
           fadeAlpha: [0, 0.8],
-          renderMode: "stretchBillboard",
+          renderMode: RenderMode.StretchBillboard,
           stretchScale: 3,
           intensity: 10,
           appearance: AppearanceMode.Square,
@@ -75,7 +75,7 @@ const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
           gravity: [0, -5, 0],
           fadeSize: [0, 0.7],
           fadeAlpha: [0, 0.8],
-          renderMode: "billboard",
+          renderMode: RenderMode.Billboard,
           intensity: 8,
           appearance: AppearanceMode.Circular,
           easeFunction: "easeOutCubic",
@@ -90,7 +90,7 @@ const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
           gravity: [0, 2, 0],
           fadeSize: [0, 0.3],
           fadeAlpha: [0.1, 0.9],
-          renderMode: "billboard",
+          renderMode: RenderMode.Billboard,
           intensity: 1,
           appearance: AppearanceMode.Circular,
           easeFunction: "easeInOutQuad",
@@ -106,7 +106,7 @@ const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
           gravity: [0, -10, 0],
           fadeSize: [0, 0.8],
           fadeAlpha: [0, 0.9],
-          renderMode: "billboard",
+          renderMode: RenderMode.Billboard,
           intensity: 3,
           appearance: AppearanceMode.Circular,
           easeFunction: "easeOutQuad",
@@ -122,7 +122,7 @@ const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
           gravity: [0, 0, 0],
           fadeSize: [0.2, 0.8],
           fadeAlpha: [0, 0.7],
-          renderMode: "billboard",
+          renderMode: RenderMode.Billboard,
           intensity: 3,
           appearance: AppearanceMode.Circular,
           easeFunction: "easeInOutSine",
@@ -145,7 +145,7 @@ const VFXSystem = forwardRef<VFXSystemRef>((_, ref) => {
           gravity: [0, 0, 0],
           fadeSize: [0.1, 0.9],
           fadeAlpha: [0, 0.8],
-          renderMode: "billboard",
+          renderMode: RenderMode.Billboard,
           intensity: 4,
           appearance: AppearanceMode.Circular,
           easeFunction: "easeInOutQuad",

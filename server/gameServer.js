@@ -305,13 +305,64 @@ io.on('connection', (socket) => {
         break
 
       case 'endTurn':
-        // Reset cooldowns for the ending player
-        const playerCards = playerRole === 'player1' ? room.player1Cards : room.player2Cards
-        playerCards.forEach(card => {
+        // Process cooldowns and debuffs for BOTH teams at end of turn
+        // This ensures debuffs tick down properly for everyone
+
+        // Process player 1 cards
+        room.player1Cards.forEach(card => {
+          // Tick down ability cooldowns
           card.abilities.forEach(ability => {
             if (ability.currentCooldown > 0) {
               ability.currentCooldown--
             }
+          })
+
+          // Tick down and process debuffs
+          card.debuffs = card.debuffs.filter(debuff => {
+            // Apply debuff damage (burn, poison, etc.)
+            if (debuff.damage && card.hp > 0) {
+              card.hp = Math.max(0, card.hp - debuff.damage)
+              console.log(`${card.name} takes ${debuff.damage} ${debuff.type} damage`)
+            }
+
+            // Reduce duration
+            debuff.duration--
+
+            // Remove if duration expired
+            if (debuff.duration <= 0) {
+              console.log(`${card.name}'s ${debuff.type} has expired`)
+              return false
+            }
+            return true
+          })
+        })
+
+        // Process player 2 cards
+        room.player2Cards.forEach(card => {
+          // Tick down ability cooldowns
+          card.abilities.forEach(ability => {
+            if (ability.currentCooldown > 0) {
+              ability.currentCooldown--
+            }
+          })
+
+          // Tick down and process debuffs
+          card.debuffs = card.debuffs.filter(debuff => {
+            // Apply debuff damage (burn, poison, etc.)
+            if (debuff.damage && card.hp > 0) {
+              card.hp = Math.max(0, card.hp - debuff.damage)
+              console.log(`${card.name} takes ${debuff.damage} ${debuff.type} damage`)
+            }
+
+            // Reduce duration
+            debuff.duration--
+
+            // Remove if duration expired
+            if (debuff.duration <= 0) {
+              console.log(`${card.name}'s ${debuff.type} has expired`)
+              return false
+            }
+            return true
           })
         })
 
@@ -538,8 +589,15 @@ function executeAbility(room, playerRole, targetId) {
 
   let visualEffect = null
   if (ability.effect || ability.damage || ability.heal) {
+    // Determine correct effect type based on ability name
+    let effectType = ability.effect || (ability.heal ? 'heal' : 'fire')
+    if (ability.name === 'Pyroblast') effectType = 'fireball'
+    else if (ability.name === 'Lightning Zap') effectType = 'lightning'
+    else if (ability.name === 'Ice Nova') effectType = 'ice_nova'
+    else if (ability.name === 'Battery Drain') effectType = 'battery_drain'
+
     visualEffect = {
-      type: ability.effect || (ability.heal ? 'heal' : 'fire'),
+      type: effectType,
       sourcePosition: sourcePos,
       targetPositions: targets.map(t => {
         const isOpponent = opponentCards.some(c => c.id === t.id)

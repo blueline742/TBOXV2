@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect } from 'react'
+import { useRef, useMemo, useEffect, memo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { freezeVertexShader, freezeFragmentShader } from '@/shaders/freezeShader'
@@ -12,7 +12,7 @@ interface EffectProps {
   onComplete?: () => void
 }
 
-export function SpellEffect({ type, position, targetPosition, duration = 1.5, onComplete }: EffectProps) {
+function SpellEffectComponent({ type, position, targetPosition, duration = 1.5, onComplete }: EffectProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null)
   const startTime = useRef<number | null>(null)
   const lightRef = useRef<THREE.PointLight>(null)
@@ -171,22 +171,22 @@ export function SpellEffect({ type, position, targetPosition, duration = 1.5, on
   }, [shaderMaterial])
 
   return (
-    <group>
-      <instancedMesh ref={meshRef} args={[undefined, undefined, particleCount]} material={shaderMaterial}>
+    <group name={`spell-effect-${type}`}>
+      <instancedMesh key="particles" ref={meshRef} args={[undefined, undefined, particleCount]} material={shaderMaterial}>
         <sphereGeometry args={[type === 'fire' ? 0.08 : 0.05, 6, 6]} />
       </instancedMesh>
 
       {type === 'freeze' && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={safePosition}>
+        <mesh key="freeze-ring" rotation={[-Math.PI / 2, 0, 0]} position={safePosition}>
           <ringGeometry args={[0.5, 3, 32]} />
           <meshBasicMaterial color="#00aaff" opacity={0.3} transparent />
         </mesh>
       )}
 
       {type === 'fire' && (
-        <>
-          <pointLight ref={lightRef} color="#ff6600" intensity={5} distance={10} position={safePosition} />
-          <mesh position={safePosition}>
+        <group key="fire-effects">
+          <pointLight key="fire-light" ref={lightRef} color="#ff6600" intensity={5} distance={10} position={safePosition} />
+          <mesh key="fire-sphere" position={safePosition}>
             <sphereGeometry args={[0.4, 16, 16]} />
             <meshBasicMaterial
               color="#ffaa00"
@@ -195,8 +195,10 @@ export function SpellEffect({ type, position, targetPosition, duration = 1.5, on
               blending={THREE.AdditiveBlending}
             />
           </mesh>
-        </>
+        </group>
       )}
     </group>
   )
 }
+
+export const SpellEffect = memo(SpellEffectComponent)

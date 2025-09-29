@@ -129,10 +129,36 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
       // Let the state sync handle the actual state update
       // This is just for triggering animations/effects
       const gameStore = useOptimizedGameStore.getState()
+      const { playerRole } = get()
 
       // Trigger visual effects
       if (data.visualEffect) {
-        window.dispatchEvent(new CustomEvent('spellEffect', { detail: data.visualEffect }))
+        // Transform positions based on player perspective
+        // Player 1 sees cards at z=2 (player) and z=-2 (opponent)
+        // Player 2 sees it flipped
+        const transformPosition = (pos: number[]) => {
+          if (!pos || pos.length !== 3) return pos
+
+          // If this is player 2, we need to flip the z coordinate
+          if (playerRole === 'player2') {
+            return [pos[0], pos[1], -pos[2]] as [number, number, number]
+          }
+          return pos as [number, number, number]
+        }
+
+        // Create proper spell effect data with transformed positions
+        const effectData = {
+          id: `effect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: data.visualEffect.type,
+          position: transformPosition(data.visualEffect.sourcePosition) || [0, 0, 0],
+          sourcePosition: transformPosition(data.visualEffect.sourcePosition),
+          targetPosition: transformPosition(data.visualEffect.targetPositions?.[0]) || transformPosition(data.visualEffect.targetPosition),
+          targetPositions: data.visualEffect.targetPositions?.map(transformPosition),
+          enemyPositions: data.visualEffect.enemyPositions?.map(transformPosition),
+          allyPositions: data.visualEffect.allyPositions?.map(transformPosition),
+          targetId: data.targetId || ''
+        }
+        window.dispatchEvent(new CustomEvent('spellEffect', { detail: effectData }))
       }
 
       // Add combat log entry

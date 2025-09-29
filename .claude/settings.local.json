@@ -27,7 +27,8 @@
       "Bash(git commit:*)",
       "Bash(node:*)",
       "WebSearch",
-      "WebFetch(domain:socket.io)"
+      "WebFetch(domain:socket.io)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
