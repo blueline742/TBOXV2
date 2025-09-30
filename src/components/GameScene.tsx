@@ -20,6 +20,7 @@ import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamag
 import { SpellEffectData } from './GameUI'
 import { preloadCardTextures } from '@/utils/texturePreloader'
 import { CardOverlay, CardPosition } from './CardOverlay'
+import { DynamicCamera } from './3d/DynamicCamera'
 
 export function GameScene() {
   const store = useOptimizedGameStore()
@@ -133,6 +134,7 @@ export function GameScene() {
     <>
     <Canvas shadows className="w-full h-full">
       <PerspectiveCamera makeDefault position={[0, 8, 10]} fov={fov} />
+      <DynamicCamera />
       <OrbitControls
         enablePan={false}
         minPolarAngle={Math.PI / 4} // 45° for less fishbowl effect
@@ -141,6 +143,8 @@ export function GameScene() {
         maxDistance={15}
         enableZoom={true}
         zoomSpeed={0.5}
+        enableDamping={true}
+        dampingFactor={0.05}
       />
 
       {/* Natural room lighting setup */}
