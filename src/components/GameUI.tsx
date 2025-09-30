@@ -14,6 +14,7 @@ import useCardStore from '@/stores/cardStore'
 import useMultiplayerStore from '@/stores/multiplayerStore'
 import { executeAbility, applyAbilityEffects } from '@/utils/abilityLogic'
 import { CombatLog } from './CombatLog'
+import { preloadTurnSounds, playYourTurnSound } from '@/utils/soundPlayer'
 
 export interface SpellEffectData {
   id: string
@@ -63,6 +64,7 @@ export function GameUI() {
 
   useEffect(() => {
     initializeCards()
+    preloadTurnSounds() // Preload turn sounds on mount
   }, [initializeCards])
 
   // Initialize game and randomly select starting player (SINGLE PLAYER ONLY)
@@ -384,6 +386,9 @@ export function GameUI() {
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto">
           <button
             onClick={() => {
+              // Play random turn sound
+              playYourTurnSound()
+
               // Use multiplayer end turn if in game, otherwise local
               if (connectionStatus === 'in_game') {
                 multiplayerEndTurn()

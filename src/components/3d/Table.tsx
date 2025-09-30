@@ -2,6 +2,94 @@ import { useRef, useMemo, useLayoutEffect } from 'react'
 import { Mesh, InstancedMesh, Object3D, Color, Matrix4 } from 'three'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
+import useOptimizedGameStore from '@/stores/optimizedGameStore'
+
+// Component for dynamic health-based hexagon colors
+function HealthHexagons() {
+  const store = useOptimizedGameStore()
+  const playerCards = Array.from(store.playerCards.values())
+  const opponentCards = Array.from(store.opponentCards.values())
+
+  // Helper to get color based on HP percentage
+  const getHealthColor = (hp: number, maxHp: number) => {
+    const percent = hp / maxHp
+    if (percent > 0.5) {
+      // Green to yellow gradient
+      const t = (percent - 0.5) * 2 // 0 to 1
+      return new THREE.Color().lerpColors(
+        new THREE.Color('#fbbf24'), // yellow
+        new THREE.Color('#22c55e'), // green
+        t
+      )
+    } else {
+      // Red to yellow gradient
+      const t = percent * 2 // 0 to 1
+      return new THREE.Color().lerpColors(
+        new THREE.Color('#ef4444'), // red
+        new THREE.Color('#fbbf24'), // yellow
+        t
+      )
+    }
+  }
+
+  return (
+    <>
+      {/* Player hexagons */}
+      {[-3, -1, 1, 3].map((x, i) => {
+        const card = playerCards[i]
+        const color = card && card.hp > 0
+          ? getHealthColor(card.hp, card.maxHp)
+          : new THREE.Color('#45b7d1') // Default blue when no card/dead
+
+        // Calculate arc angle based on HP (0 to 2π)
+        const hpPercent = card && card.hp > 0 ? card.hp / card.maxHp : 1
+        const thetaLength = hpPercent * Math.PI * 2
+
+        return (
+          <mesh
+            key={`player-slot-${i}`}
+            position={[x, -0.97, 2]}
+            rotation={[-Math.PI / 2, 0, Math.PI / 2]} // Rotate to start from top
+          >
+            <ringGeometry args={[0.9, 1.1, 6, 1, 0, thetaLength]} />
+            <meshBasicMaterial
+              color={color}
+              opacity={card && card.hp > 0 ? 0.6 : 0.2}
+              transparent
+            />
+          </mesh>
+        )
+      })}
+
+      {/* Opponent hexagons */}
+      {[-3, -1, 1, 3].map((x, i) => {
+        const card = opponentCards[i]
+        const color = card && card.hp > 0
+          ? getHealthColor(card.hp, card.maxHp)
+          : new THREE.Color('#ff6b6b') // Default red when no card/dead
+
+        // Calculate arc angle based on HP (0 to 2π)
+        const hpPercent = card && card.hp > 0 ? card.hp / card.maxHp : 1
+        const thetaLength = hpPercent * Math.PI * 2
+
+        return (
+          <mesh
+            key={`opponent-slot-${i}`}
+            position={[x, -0.97, -2]}
+            rotation={[-Math.PI / 2, 0, Math.PI / 2]} // Rotate to start from top
+          >
+            <ringGeometry args={[0.9, 1.1, 6, 1, 0, thetaLength]} />
+            <meshBasicMaterial
+              color={color}
+              opacity={card && card.hp > 0 ? 0.6 : 0.2}
+              transparent
+            />
+          </mesh>
+        )
+      })}
+    </>
+  )
+}
 
 export function Table() {
   const tableRef = useRef<Mesh>(null)
@@ -152,44 +240,8 @@ export function Table() {
         />
       </mesh>
 
-      {/* Card placement guides with playful colors */}
-      {[-3, -1, 1, 3].map((x, i) => (
-        <group key={`player-slot-${i}`}>
-          <mesh
-            position={[x, -0.97, 2]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <ringGeometry args={[0.9, 1.1, 6]} />
-            <meshBasicMaterial color="#45b7d1" opacity={0.2} transparent />
-          </mesh>
-          <mesh
-            position={[x, -0.96, 2]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[1.6, 2]} />
-            <meshBasicMaterial color="#45b7d1" opacity={0.05} transparent />
-          </mesh>
-        </group>
-      ))}
-
-      {[-3, -1, 1, 3].map((x, i) => (
-        <group key={`opponent-slot-${i}`}>
-          <mesh
-            position={[x, -0.97, -2]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <ringGeometry args={[0.9, 1.1, 6]} />
-            <meshBasicMaterial color="#ff6b6b" opacity={0.2} transparent />
-          </mesh>
-          <mesh
-            position={[x, -0.96, -2]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[1.6, 2]} />
-            <meshBasicMaterial color="#ff6b6b" opacity={0.05} transparent />
-          </mesh>
-        </group>
-      ))}
+      {/* Card placement guides - now with dynamic health colors */}
+      <HealthHexagons />
 
       {/* Instanced toy blocks scattered around */}
       <instancedMesh

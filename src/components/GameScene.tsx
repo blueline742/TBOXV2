@@ -27,27 +27,38 @@ export function GameScene() {
   const currentTurn = useCurrentTurn()
   const { endTurn } = useGameActions()
 
-  // Track card screen positions for DOM overlay
+  // Track card positions for debuff overlay
   const [cardPositions, setCardPositions] = useState<CardPosition[]>([])
+
+  // Dynamic FOV based on aspect ratio for better mobile experience
+  const [fov, setFov] = useState(50)
+
+  useEffect(() => {
+    const updateFov = () => {
+      const aspectRatio = window.innerWidth / window.innerHeight
+      // Portrait or narrow screens get wider FOV
+      setFov(aspectRatio < 1 ? 70 : aspectRatio < 1.3 ? 60 : 50)
+    }
+
+    updateFov()
+    window.addEventListener('resize', updateFov)
+    return () => window.removeEventListener('resize', updateFov)
+  }, [])
 
   // Preload all textures on mount
   useEffect(() => {
     preloadCardTextures()
   }, [])
 
-  // Callback for cards to update their screen positions
+  // Callback for cards to update their screen positions (only for debuff display)
   const handleScreenPositionUpdate = useCallback((cardId: string, side: 'player' | 'opponent', screenPosition: { x: number; y: number }) => {
     setCardPositions(prev => {
       const existing = prev.find(p => p.cardId === cardId && p.side === side)
       if (existing) {
-        // Update existing position
         return prev.map(p =>
-          p.cardId === cardId && p.side === side
-            ? { ...p, screenPosition }
-            : p
+          p.cardId === cardId && p.side === side ? { ...p, screenPosition } : p
         )
       } else {
-        // Add new position
         return [...prev, { cardId, side, screenPosition }]
       }
     })
@@ -121,7 +132,7 @@ export function GameScene() {
   return (
     <>
     <Canvas shadows className="w-full h-full">
-      <PerspectiveCamera makeDefault position={[0, 8, 10]} fov={50} />
+      <PerspectiveCamera makeDefault position={[0, 8, 10]} fov={fov} />
       <OrbitControls
         enablePan={false}
         minPolarAngle={Math.PI / 4} // 45° for less fishbowl effect

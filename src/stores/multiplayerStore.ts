@@ -341,6 +341,18 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
 
     // console.log('State sync received:', gameState)
 
+    // Check if turn changed and play sound for the player whose turn it is now
+    const currentPhase = gameStore.phase
+    const turnChangedToMe = gameState.currentTurn === playerRole && currentPhase !== 'player_turn'
+
+    // If turn changed to my turn, play sound
+    if (turnChangedToMe) {
+      // Dynamic import to avoid SSR issues
+      import('@/utils/soundPlayer').then(({ playYourTurnSound }) => {
+        playYourTurnSound()
+      })
+    }
+
     // Fix card positions based on player perspective
     const fixCardPositions = (cards: any[], isPlayer: boolean) => {
       return cards.map((card, i) => ({

@@ -70,18 +70,14 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
   useFrame((state, delta) => {
     if (!meshRef.current) return
 
-    // Distance culling - skip animations for distant cards
-    const distance = meshRef.current.position.distanceTo(state.camera.position)
-    if (distance > 20) return
-
-    // Update screen position for DOM overlay (throttled for performance)
-    if (onScreenPositionUpdate && state.clock.elapsedTime % 0.05 < delta) {
+    // Update screen position for debuff overlay (only if card has debuffs - performance optimization)
+    if (onScreenPositionUpdate && card.debuffs.length > 0 && state.clock.elapsedTime % 0.1 < delta) {
       const vector = new Vector3()
       meshRef.current.getWorldPosition(vector)
       vector.project(camera)
 
       const x = (vector.x * 0.5 + 0.5) * size.width
-      const y = (-(vector.y * 0.5) + 0.5) * size.height - 100 // Offset for position above card
+      const y = (-(vector.y * 0.5) + 0.5) * size.height - 100
 
       onScreenPositionUpdate(card.id, side, { x, y })
     }
