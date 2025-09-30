@@ -309,27 +309,38 @@ const useOptimizedGameStore = create<GameState>()(
           }
         }),
 
-        tickDebuffs: () => set((state) => {
-          const processCards = (cardsMap: Map<string, CardData>) => {
-            cardsMap.forEach(card => {
-              card.debuffs = card.debuffs.filter(debuff => {
-                // Apply debuff damage
-                if (debuff.damage) {
-                  card.hp = Math.max(0, card.hp - debuff.damage)
-                }
+        tickDebuffs: () => {
+          const state = get()
 
-                // Reduce duration
-                debuff.duration -= 1
+          // Early exit optimization - skip if no cards have debuffs
+          const hasDebuffs = Array.from(state.playerCards.values()).concat(Array.from(state.opponentCards.values()))
+            .some(c => c.debuffs.length > 0)
+          if (!hasDebuffs) return
 
-                // Keep if duration > 0
-                return debuff.duration > 0
+          set((state) => {
+            const processCards = (cardsMap: Map<string, CardData>) => {
+              cardsMap.forEach(card => {
+                if (card.debuffs.length === 0) return // Skip cards without debuffs
+
+                card.debuffs = card.debuffs.filter(debuff => {
+                  // Apply debuff damage
+                  if (debuff.damage) {
+                    card.hp = Math.max(0, card.hp - debuff.damage)
+                  }
+
+                  // Reduce duration
+                  debuff.duration -= 1
+
+                  // Keep if duration > 0
+                  return debuff.duration > 0
+                })
               })
-            })
-          }
+            }
 
-          processCards(state.playerCards)
-          processCards(state.opponentCards)
-        }),
+            processCards(state.playerCards)
+            processCards(state.opponentCards)
+          })
+        },
 
         // ============= ABILITY MANAGEMENT =============
         castSpell: (casterId, targetId, abilityIndex) => {

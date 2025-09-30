@@ -2,7 +2,7 @@
 
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Environment, Stars, useHelper } from '@react-three/drei'
-import { Suspense, useEffect, useState, useRef } from 'react'
+import { Suspense, useEffect, useState, useRef, useCallback } from 'react'
 import * as THREE from 'three'
 import useOptimizedGameStore, { useGamePhase, useCurrentTurn, useGameActions } from '@/stores/optimizedGameStore'
 import { Table } from './3d/Table'
@@ -18,6 +18,8 @@ import { VFXSwordStrike } from './3d/VFXSwordStrike'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
+import { preloadCardTextures } from '@/utils/texturePreloader'
+import { CardOverlay, CardPosition } from './CardOverlay'
 
 export function GameScene() {
   const store = useOptimizedGameStore()
@@ -25,13 +27,39 @@ export function GameScene() {
   const currentTurn = useCurrentTurn()
   const { endTurn } = useGameActions()
 
+  // Track card screen positions for DOM overlay
+  const [cardPositions, setCardPositions] = useState<CardPosition[]>([])
+
+  // Preload all textures on mount
+  useEffect(() => {
+    preloadCardTextures()
+  }, [])
+
+  // Callback for cards to update their screen positions
+  const handleScreenPositionUpdate = useCallback((cardId: string, side: 'player' | 'opponent', screenPosition: { x: number; y: number }) => {
+    setCardPositions(prev => {
+      const existing = prev.find(p => p.cardId === cardId && p.side === side)
+      if (existing) {
+        // Update existing position
+        return prev.map(p =>
+          p.cardId === cardId && p.side === side
+            ? { ...p, screenPosition }
+            : p
+        )
+      } else {
+        // Add new position
+        return [...prev, { cardId, side, screenPosition }]
+      }
+    })
+  }, [])
+
   // Convert Maps to arrays for rendering
   const playerCards = Array.from(store.playerCards.values())
   const opponentCards = Array.from(store.opponentCards.values())
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
@@ -91,6 +119,7 @@ export function GameScene() {
   }
 
   return (
+    <>
     <Canvas shadows className="w-full h-full">
       <PerspectiveCamera makeDefault position={[0, 8, 10]} fov={50} />
       <OrbitControls
@@ -163,6 +192,7 @@ export function GameScene() {
             position={card.position || [(-3 + index * 2) as number, 0, 2]}
             side="player"
             index={index}
+            onScreenPositionUpdate={handleScreenPositionUpdate}
           />
         ))}
 
@@ -173,6 +203,7 @@ export function GameScene() {
             position={card.position || [(-3 + index * 2) as number, 0, -2]}
             side="opponent"
             index={index}
+            onScreenPositionUpdate={handleScreenPositionUpdate}
           />
         ))}
 
@@ -249,5 +280,7 @@ export function GameScene() {
         })}
       </Suspense>
     </Canvas>
+    <CardOverlay cards={cardPositions} />
+    </>
   )
 }

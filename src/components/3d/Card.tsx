@@ -1,25 +1,28 @@
 import { useRef, useState, useMemo, useEffect } from 'react'
-import { Mesh, TextureLoader } from 'three'
-import { useFrame, useLoader } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
+import { Mesh, Vector3 } from 'three'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useCard, useSelection, useGamePhase, useCurrentTurn } from '@/stores/optimizedGameStore'
 import { CardData } from '@/stores/cardStore'
 import { FireAuraEffect } from './FireAuraEffect'
 import { DamageNumbers } from './DamageNumbers'
+import { useCardTexture } from '@/utils/texturePreloader'
 
 interface CardProps {
   card: CardData
   position: [number, number, number]
   side: 'player' | 'opponent'
   index: number
+  onScreenPositionUpdate?: (cardId: string, side: 'player' | 'opponent', screenPos: { x: number; y: number }) => void
 }
 
-export function Card({ card: initialCard, position, side, index }: CardProps) {
+export function Card({ card: initialCard, position, side, index, onScreenPositionUpdate }: CardProps) {
   const meshRef = useRef<Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const [previousHp, setPreviousHp] = useState(initialCard.hp)
   const [damageFlash, setDamageFlash] = useState(false)
   const [healFlash, setHealFlash] = useState(false)
+
+  const { camera, size } = useThree()
 
   // Use optimized selectors
   const card = useCard(side, initialCard.id) || initialCard
@@ -30,11 +33,17 @@ export function Card({ card: initialCard, position, side, index }: CardProps) {
   const isSelected = selectedCardId === card.id
   const isTarget = targetCardId === card.id
   const isDead = card.hp <= 0
-  const isFrozen = card.debuffs.some(d => d.type === 'frozen')
-  const isBurned = card.debuffs.some(d => d.type === 'burned')
-  const isPoisoned = card.debuffs.some(d => d.type === 'poisoned')
-  const isStunned = card.debuffs.some(d => d.type === 'stunned')
-  const hasFireAura = card.debuffs.find(d => d.type === 'fire_aura')
+
+  // Memoize debuff checks for performance
+  const debuffFlags = useMemo(() => ({
+    isFrozen: card.debuffs.some(d => d.type === 'frozen'),
+    isBurned: card.debuffs.some(d => d.type === 'burned'),
+    isPoisoned: card.debuffs.some(d => d.type === 'poisoned'),
+    isStunned: card.debuffs.some(d => d.type === 'stunned'),
+    hasFireAura: card.debuffs.find(d => d.type === 'fire_aura'),
+  }), [card.debuffs])
+
+  const { isFrozen, isBurned, isPoisoned, isStunned, hasFireAura } = debuffFlags
   const fireAuraStacks = hasFireAura?.stacks || 0
 
   // Detect HP changes for visual feedback
@@ -55,16 +64,35 @@ export function Card({ card: initialCard, position, side, index }: CardProps) {
   const canBeSelected = phase === 'player_turn' && side === 'player' && !isDead && !isStunned
   const canBeTargeted = phase === 'player_turn' && side === 'opponent' && !isDead
 
-  // Load the actual card texture
-  const texture = useLoader(TextureLoader, card.texture || '/wizardnft.webp')
+  // Load the actual card texture from preloaded cache
+  const texture = useCardTexture(card.texture || '/wizardnft.webp')
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!meshRef.current) return
+
+    // Distance culling - skip animations for distant cards
+    const distance = meshRef.current.position.distanceTo(state.camera.position)
+    if (distance > 20) return
+
+    // Update screen position for DOM overlay (throttled for performance)
+    if (onScreenPositionUpdate && state.clock.elapsedTime % 0.05 < delta) {
+      const vector = new Vector3()
+      meshRef.current.getWorldPosition(vector)
+      vector.project(camera)
+
+      const x = (vector.x * 0.5 + 0.5) * size.width
+      const y = (-(vector.y * 0.5) + 0.5) * size.height - 100 // Offset for position above card
+
+      onScreenPositionUpdate(card.id, side, { x, y })
+    }
 
     // Apply vertical animations relative to the mesh's origin (0,0,0)
     if (isDead) {
-      meshRef.current.position.y = -0.4
-      meshRef.current.rotation.x = -Math.PI / 2
+      // Stop death animation when complete
+      if (meshRef.current.position.y > -0.35) {
+        meshRef.current.position.y = -0.4
+        meshRef.current.rotation.x = -Math.PI / 2
+      }
     } else {
       meshRef.current.position.y = 0 // Start at origin
       if (isSelected) {
@@ -139,75 +167,7 @@ export function Card({ card: initialCard, position, side, index }: CardProps) {
         />
       </mesh>
 
-      {!isDead && (
-        <>
-          <Html
-            position={[0, 1.3, 0.1]}
-            center
-            distanceFactor={10}
-            style={{
-              userSelect: 'none',
-              pointerEvents: 'none'
-            }}
-          >
-            <div className="flex flex-col items-center gap-1">
-              {card.debuffs.length > 0 && (
-                <div className="flex gap-1 mb-1">
-                  {card.debuffs.map((debuff, i) => {
-                    // Define icons and colors for each debuff type
-                    const debuffDisplay = {
-                      frozen: { icon: '❄️', bg: 'bg-blue-500/90', label: 'Frozen' },
-                      burned: { icon: '🔥', bg: 'bg-red-500/90', label: 'Burn' },
-                      fire_aura: { icon: '🔥', bg: 'bg-orange-600/90', label: 'Fire Aura' },
-                      poisoned: { icon: '☠️', bg: 'bg-green-600/90', label: 'Poison' },
-                      stunned: { icon: '⚡', bg: 'bg-yellow-600/90', label: 'Stun' }
-                    }[debuff.type] || { icon: '⚠️', bg: 'bg-gray-600/90', label: debuff.type }
-
-                    return (
-                      <div
-                        key={i}
-                        className={`${debuffDisplay.bg} px-1.5 py-0.5 rounded flex items-center gap-1 text-white`}
-                        title={`${debuffDisplay.label}: ${debuff.damage ? `${debuff.damage * (debuff.stacks || 1)} dmg/turn` : 'No damage'} ${debuff.duration > 0 ? `(${debuff.duration} turns)` : ''}`}
-                      >
-                        <span className="text-sm">{debuffDisplay.icon}</span>
-                        {debuff.type === 'fire_aura' && debuff.stacks && debuff.stacks > 1 && (
-                          <span className="text-xs font-bold">{debuff.stacks}</span>
-                        )}
-                        {debuff.damage && (
-                          <span className="text-xs font-semibold">
-                            {debuff.damage * (debuff.stacks || 1)}
-                          </span>
-                        )}
-                        {debuff.duration > 0 && debuff.duration < 999 && (
-                          <span className="text-xs opacity-75">({debuff.duration})</span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-              <div className="bg-black/80 rounded-lg px-2 py-1">
-                <div className="w-20 bg-gray-700 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="h-full transition-all duration-300"
-                    style={{
-                      width: `${(card.hp / card.maxHp) * 100}%`,
-                      background: card.hp / card.maxHp > 0.5 ?
-                        'linear-gradient(to right, #10b981, #22c55e)' :
-                        card.hp / card.maxHp > 0.25 ?
-                        'linear-gradient(to right, #f59e0b, #fbbf24)' :
-                        'linear-gradient(to right, #dc2626, #ef4444)'
-                    }}
-                  />
-                </div>
-                <div className="text-white text-xs text-center mt-0.5">
-                  {card.hp}/{card.maxHp} HP
-                </div>
-              </div>
-            </div>
-          </Html>
-        </>
-      )}
+      {/* HP and debuffs now handled by DOM overlay for better performance */}
 
       {isSelected && (
         <mesh position={[0, -1.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>

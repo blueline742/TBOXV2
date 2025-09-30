@@ -1,24 +1,27 @@
-import { useRef, useState, useEffect, memo } from 'react'
-import { Mesh, TextureLoader } from 'three'
-import { useFrame, useLoader } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
+import { useRef, useState, useEffect, memo, useMemo } from 'react'
+import { Mesh, Vector3 } from 'three'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useCard, useSelection, useGamePhase, useCurrentTurn } from '@/stores/optimizedGameStore'
 import { CardData } from '@/stores/cardStore'
+import { useCardTexture } from '@/utils/texturePreloader'
 
 interface OptimizedCardProps {
   cardId: string
   position: [number, number, number]
   side: 'player' | 'opponent'
   index: number
+  onScreenPositionUpdate?: (cardId: string, side: 'player' | 'opponent', screenPos: { x: number; y: number }) => void
 }
 
 // Memoized component - only re-renders when its specific card data changes
-export const OptimizedCard = memo(({ cardId, position, side, index }: OptimizedCardProps) => {
+export const OptimizedCard = memo(({ cardId, position, side, index, onScreenPositionUpdate }: OptimizedCardProps) => {
   const meshRef = useRef<Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const [previousHp, setPreviousHp] = useState<number | null>(null)
   const [damageFlash, setDamageFlash] = useState(false)
   const [healFlash, setHealFlash] = useState(false)
+
+  const { camera, size } = useThree()
 
   // Optimized selectors - only subscribe to what we need
   const card = useCard(side, cardId)
@@ -31,13 +34,19 @@ export const OptimizedCard = memo(({ cardId, position, side, index }: OptimizedC
   const isSelected = selectedCardId === cardId
   const isTarget = targetCardId === cardId
   const isDead = card.hp <= 0
-  const isFrozen = card.debuffs.some(d => d.type === 'frozen')
-  const isBurned = card.debuffs.some(d => d.type === 'burned')
-  const isPoisoned = card.debuffs.some(d => d.type === 'poisoned')
-  const isStunned = card.debuffs.some(d => d.type === 'stunned')
 
-  // Load texture
-  const texture = useLoader(TextureLoader, card.texture || '/placeholder.png')
+  // Memoize debuff checks - prevents recalculating every frame
+  const debuffFlags = useMemo(() => ({
+    isFrozen: card.debuffs.some(d => d.type === 'frozen'),
+    isBurned: card.debuffs.some(d => d.type === 'burned'),
+    isPoisoned: card.debuffs.some(d => d.type === 'poisoned'),
+    isStunned: card.debuffs.some(d => d.type === 'stunned')
+  }), [card.debuffs])
+
+  const { isFrozen, isBurned, isPoisoned, isStunned } = debuffFlags
+
+  // Load texture from preloaded cache
+  const texture = useCardTexture(card.texture)
 
   // HP change detection
   useEffect(() => {
@@ -53,9 +62,25 @@ export const OptimizedCard = memo(({ cardId, position, side, index }: OptimizedC
     setPreviousHp(card.hp)
   }, [card.hp, previousHp])
 
-  // Animation
+  // Animation with performance optimizations
   useFrame((state, delta) => {
     if (!meshRef.current) return
+
+    // Distance culling - skip animations for distant cards
+    const distance = meshRef.current.position.distanceTo(state.camera.position)
+    if (distance > 20) return
+
+    // Update screen position for DOM overlay (throttled to every 3rd frame for performance)
+    if (onScreenPositionUpdate && state.clock.elapsedTime % 0.05 < delta) {
+      const vector = new Vector3()
+      meshRef.current.getWorldPosition(vector)
+      vector.project(camera)
+
+      const x = (vector.x * 0.5 + 0.5) * size.width
+      const y = (-(vector.y * 0.5) + 0.5) * size.height - 80 // Offset for position above card
+
+      onScreenPositionUpdate(cardId, side, { x, y })
+    }
 
     // Hover animation
     const targetY = hovered && !isDead ? 0.3 : 0
@@ -66,8 +91,8 @@ export const OptimizedCard = memo(({ cardId, position, side, index }: OptimizedC
       meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.1
     }
 
-    // Death animation
-    if (isDead) {
+    // Death animation - stop when scale reaches minimum
+    if (isDead && meshRef.current.scale.x > 0.11) {
       meshRef.current.rotation.x += delta * 0.5
       meshRef.current.position.y -= delta * 0.3
       meshRef.current.scale.setScalar(Math.max(0.1, meshRef.current.scale.x - delta * 0.5))
@@ -136,33 +161,7 @@ export const OptimizedCard = memo(({ cardId, position, side, index }: OptimizedC
         />
       </mesh>
 
-      {/* HP Display */}
-      <Html
-        center
-        distanceFactor={10}
-        position={[0, -1.5, 0]}
-        style={{
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}
-      >
-        <div className="flex flex-col items-center gap-1">
-          <div className="bg-black/80 px-2 py-1 rounded text-white text-xs font-bold">
-            {card.name}
-          </div>
-          <div className="bg-black/80 px-2 py-1 rounded text-white text-xs">
-            {card.hp}/{card.maxHp} HP
-          </div>
-          {card.debuffs.length > 0 && (
-            <div className="flex gap-1">
-              {isFrozen && <span className="text-cyan-300 text-xs">❄️</span>}
-              {isBurned && <span className="text-orange-400 text-xs">🔥</span>}
-              {isPoisoned && <span className="text-green-400 text-xs">☠️</span>}
-              {isStunned && <span className="text-yellow-400 text-xs">⚡</span>}
-            </div>
-          )}
-        </div>
-      </Html>
+      {/* HP and debuffs now handled by DOM overlay - removed Html component for performance */}
 
       {/* Selection Ring */}
       {isSelected && (
