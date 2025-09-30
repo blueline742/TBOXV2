@@ -183,6 +183,52 @@ src/
 
 ---
 
+## Troubleshooting: Multi-Target Spell VFX
+
+### Issue: VFX only appears on one target when ability affects multiple cards
+
+**Symptom:** Your ability correctly buffs/damages all targets, but the visual effect (shield bubble, particles, etc.) only appears on one card (often the leftmost).
+
+**Root Cause:** `GameScene.tsx` is only using `targetPosition` (singular) instead of checking for `targetPositions` (array) in the effect data.
+
+**Solution Pattern:**
+```typescript
+// In GameScene.tsx activeEffects.map():
+if (effect.type === 'your_effect') {
+  // Check for multiple targets first
+  if (effect.targetPositions && effect.targetPositions.length > 1) {
+    return effect.targetPositions.map((pos, idx) => (
+      <YourVFXComponent
+        key={`${effect.id}-${idx}`}
+        position={pos}
+        onComplete={() => {
+          // Only remove effect when last instance completes
+          if (idx === effect.targetPositions!.length - 1) {
+            removeEffect(effect.id)
+          }
+        }}
+      />
+    ))
+  }
+  // Single target fallback
+  return (
+    <YourVFXComponent
+      key={effect.id}
+      position={effect.targetPosition || effect.position}
+      onComplete={() => removeEffect(effect.id)}
+    />
+  )
+}
+```
+
+**Key Points:**
+- `GameUI.tsx` should calculate all target positions and pass them as `targetPositions` array
+- `GameScene.tsx` must map over the array to render multiple VFX components
+- Only call `removeEffect()` on the last component to avoid early cleanup
+- Test with abilities that target "allies" or "all_enemies" to verify
+
+---
+
 ## TL;DR
 
 **Default:** Just describe the effect, I'll optimize automatically

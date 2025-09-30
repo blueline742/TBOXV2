@@ -58,8 +58,8 @@ const toyCards = [
     texture: '/brickdudenft.webp',
     abilities: [
       { name: 'Sword Strike', description: 'Basic attack', damage: 25, targetType: 'single' },
-      { name: 'Shield Bash', description: 'Damage and stun', damage: 15, effect: 'stun', targetType: 'single' },
-      { name: 'Rally', description: 'Heal all allies', heal: 20, targetType: 'allies' }
+      { name: 'Block Defence', description: 'Shield all allies absorbing 10 damage', effect: 'shield', targetType: 'allies' },
+      { name: 'Whirlwind Slash', description: 'Spin attack damaging all enemies', damage: 20, targetType: 'all' }
     ]
   },
   {
@@ -570,9 +570,36 @@ function executeAbility(room, playerRole, targetId) {
     // Apply standard effects
     targets.forEach(target => {
       if (ability.damage) {
-        const damageAmount = ability.damage
-        const actualDamage = Math.min(damageAmount, target.hp)
-        target.hp = Math.max(0, target.hp - damageAmount)
+        let damageAmount = ability.damage
+        let actualDamage = damageAmount
+
+        // Check for shield debuff and absorb damage first
+        const shieldDebuff = target.debuffs.find(d => d.type === 'shielded')
+        if (shieldDebuff && shieldDebuff.shieldAmount && shieldDebuff.shieldAmount > 0) {
+          if (shieldDebuff.shieldAmount >= damageAmount) {
+            // Shield absorbs all damage
+            shieldDebuff.shieldAmount -= damageAmount
+            actualDamage = 0
+            damageAmount = 0
+            // Remove shield if depleted
+            if (shieldDebuff.shieldAmount <= 0) {
+              target.debuffs = target.debuffs.filter(d => d.type !== 'shielded')
+            }
+          } else {
+            // Shield absorbs partial damage
+            damageAmount -= shieldDebuff.shieldAmount
+            actualDamage = damageAmount
+            shieldDebuff.shieldAmount = 0
+            target.debuffs = target.debuffs.filter(d => d.type !== 'shielded')
+          }
+        }
+
+        // Apply remaining damage to HP
+        if (damageAmount > 0) {
+          actualDamage = Math.min(damageAmount, target.hp)
+          target.hp = Math.max(0, target.hp - damageAmount)
+        }
+
         damages.push({ cardId: target.id, amount: actualDamage })
       }
       if (ability.heal) {
@@ -587,11 +614,21 @@ function executeAbility(room, playerRole, targetId) {
           'burn': { type: 'burned', duration: 3, damage: 5 },
           'stun': { type: 'stunned', duration: 1 },
           'poison': { type: 'poisoned', duration: 4, damage: 3 },
-          'shield': { type: 'shielded', duration: 2 }
+          'shield': { type: 'shielded', duration: 999, shieldAmount: 10 }
         }
         const debuff = debuffMap[ability.effect]
         if (debuff && target.hp > 0) {
-          target.debuffs.push(debuff)
+          // Check if shield already exists and stack it
+          if (debuff.type === 'shielded') {
+            const existingShield = target.debuffs.find(d => d.type === 'shielded')
+            if (existingShield) {
+              existingShield.shieldAmount = (existingShield.shieldAmount || 0) + (debuff.shieldAmount || 0)
+            } else {
+              target.debuffs.push(debuff)
+            }
+          } else {
+            target.debuffs.push(debuff)
+          }
           debuffsApplied.push({ cardId: target.id, debuff: debuff })
         }
       }
@@ -612,6 +649,7 @@ function executeAbility(room, playerRole, targetId) {
     else if (ability.name === 'Battery Drain') effectType = 'battery_drain'
     else if (ability.name === 'Chaos Shuffle') effectType = 'chaos_shuffle'
     else if (ability.name === 'Sword Strike') effectType = 'sword_strike'
+    else if (ability.name === 'Whirlwind Slash') effectType = 'whirlwind_slash'
 
     const targetPositionsList = targets.map(t => {
       const isOpponent = opponentCards.some(c => c.id === t.id)

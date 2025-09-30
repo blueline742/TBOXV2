@@ -86,6 +86,7 @@ interface GameState extends GameMeta, Selection, AutoBattle, Cards, CombatLog {
   updateCard: (side: 'player' | 'opponent', cardId: string, updates: Partial<CardData>) => void
   damageCard: (side: 'player' | 'opponent', cardId: string, damage: number) => void
   healCard: (side: 'player' | 'opponent', cardId: string, amount: number) => void
+  addShield: (side: 'player' | 'opponent', cardId: string, amount: number) => void
 
   // Actions - Debuffs
   addDebuff: (side: 'player' | 'opponent', cardId: string, debuff: Debuff) => void
@@ -256,7 +257,30 @@ const useOptimizedGameStore = create<GameState>()(
           const cardsMap = side === 'player' ? state.playerCards : state.opponentCards
           const card = cardsMap.get(cardId)
           if (card) {
-            card.hp = Math.max(0, card.hp - damage)
+            // Check for shield debuff first
+            const shieldDebuff = card.debuffs.find(d => d.type === 'shielded')
+            if (shieldDebuff && shieldDebuff.shieldAmount && shieldDebuff.shieldAmount > 0) {
+              if (shieldDebuff.shieldAmount >= damage) {
+                // Shield absorbs all damage
+                shieldDebuff.shieldAmount -= damage
+                damage = 0
+                // If shield is depleted, remove the debuff
+                if (shieldDebuff.shieldAmount <= 0) {
+                  card.debuffs = card.debuffs.filter(d => d.type !== 'shielded')
+                }
+              } else {
+                // Shield absorbs partial damage, rest goes to HP
+                damage -= shieldDebuff.shieldAmount
+                shieldDebuff.shieldAmount = 0
+                // Remove depleted shield
+                card.debuffs = card.debuffs.filter(d => d.type !== 'shielded')
+              }
+            }
+
+            // Apply remaining damage to HP
+            if (damage > 0) {
+              card.hp = Math.max(0, card.hp - damage)
+            }
           }
         }, false, `damageCard:${cardId}:${damage}`),
 
@@ -268,6 +292,14 @@ const useOptimizedGameStore = create<GameState>()(
           }
         }, false, `healCard:${cardId}:${amount}`),
 
+        addShield: (side, cardId, amount) => set((state) => {
+          const cardsMap = side === 'player' ? state.playerCards : state.opponentCards
+          const card = cardsMap.get(cardId)
+          if (card) {
+            card.shield = (card.shield || 0) + amount
+          }
+        }, false, `addShield:${cardId}:${amount}`),
+
         // ============= DEBUFF MANAGEMENT =============
         addDebuff: (side, cardId, debuff) => set((state) => {
           const cardsMap = side === 'player' ? state.playerCards : state.opponentCards
@@ -275,7 +307,7 @@ const useOptimizedGameStore = create<GameState>()(
           if (card) {
             const existingDebuff = card.debuffs.find(d => d.type === debuff.type)
 
-            // Handle stackable debuffs (like Fire Aura)
+            // Handle stackable debuffs (like Fire Aura and Shield)
             if (debuff.type === 'fire_aura' && existingDebuff) {
               // Stack the debuff up to max stacks
               const maxStacks = debuff.maxStacks || 3
@@ -285,6 +317,12 @@ const useOptimizedGameStore = create<GameState>()(
               existingDebuff.stacks = newStacks
               existingDebuff.damage = 5 * newStacks  // 5 damage per stack
               existingDebuff.duration = debuff.duration  // Refresh duration
+            } else if (debuff.type === 'shielded' && existingDebuff) {
+              // Stack shield amounts (unlimited stacking)
+              const currentShield = existingDebuff.shieldAmount || 0
+              const newShield = debuff.shieldAmount || 0
+              existingDebuff.shieldAmount = currentShield + newShield
+              console.log(`[SHIELD STACK] Stacking shield: ${currentShield} + ${newShield} = ${existingDebuff.shieldAmount}`)
             } else if (existingDebuff) {
               // Replace existing non-stackable debuff
               const index = card.debuffs.indexOf(existingDebuff)

@@ -18,7 +18,7 @@ import { preloadTurnSounds, playYourTurnSound } from '@/utils/soundPlayer'
 
 export interface SpellEffectData {
   id: string
-  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike'
+  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield'
   position: [number, number, number]
   targetId: string
   sourcePosition?: [number, number, number]
@@ -141,10 +141,23 @@ export function GameUI() {
         setAutoSelectedAbility(randomAbilityIndex)
 
         const ability = randomCard.abilities[randomAbilityIndex]
-        setGameMessage(`${randomCard.name} prepares ${ability.name}! Select a target!`)
 
-        // For player turn, wait for target selection
-        setWaitingForTarget(true)
+        // Auto-execute for self and all abilities
+        if (ability.targetType === 'self' || ability.targetType === 'all') {
+          const autoTargetId = ability.targetType === 'self' ? randomCard.id : 'all'
+          setGameMessage(`${randomCard.name} uses ${ability.name}!`)
+          setWaitingForTarget(false)
+
+          setTimeout(() => {
+            executeAutoSelectedAbility(autoTargetId)
+          }, 500)
+        } else if (ability.targetType === 'allies') {
+          setGameMessage(`${randomCard.name} prepares ${ability.name}! Click any ally to buff the whole team!`)
+          setWaitingForTarget(true)
+        } else {
+          setGameMessage(`${randomCard.name} prepares ${ability.name}! Select a target!`)
+          setWaitingForTarget(true)
+        }
       }, 100) // Small delay to prevent rapid cycling
 
       return () => clearTimeout(selectionTimer)
@@ -171,7 +184,9 @@ export function GameUI() {
         targetId = autoSelectedCard.id
         break
       case 'allies':
-        const allyWithLowestHp = opponentCards
+        // For opponent's allies, select from opponentCards
+        const allies = currentTurn === 'opponent' ? opponentCards : playerCards
+        const allyWithLowestHp = allies
           .filter(c => c.hp > 0 && c.hp < c.maxHp)
           .sort((a, b) => a.hp - b.hp)[0]
         targetId = allyWithLowestHp ? allyWithLowestHp.id : autoSelectedCard.id
@@ -220,8 +235,7 @@ export function GameUI() {
       setGameMessage(result.message)
 
       // Create spell effect for visualization
-      console.log('[GAMEUI DEBUG] Ability:', ability.name, 'Visual Effect:', result.visualEffect)
-      if (result.visualEffect || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain') {
+      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike') {
         const sourceIndex = (currentTurn === 'player' ? playerCards : opponentCards).findIndex(c => c.id === autoSelectedCard.id)
         const sourceX = -3 + sourceIndex * 2
         const sourcePos: [number, number, number] = [sourceX, 0.5, currentTurn === 'player' ? 2 : -2]
@@ -231,10 +245,23 @@ export function GameUI() {
 
         if (ability.targetType === 'all' || ability.name === 'Lightning Zap') {
           const targets = currentTurn === 'player' ? opponentCards : playerCards
-          targetPositions = targets.filter(c => c.hp > 0).map((_, i) => {
-            const x = -3 + i * 2
-            return [x, 0.5, currentTurn === 'player' ? -2 : 2] as [number, number, number]
-          })
+          targetPositions = targets
+            .map((card, originalIndex) => ({ card, originalIndex }))
+            .filter(({ card }) => card.hp > 0)
+            .map(({ originalIndex }) => {
+              const x = -3 + originalIndex * 2
+              return [x, 0.5, currentTurn === 'player' ? -2 : 2] as [number, number, number]
+            })
+        } else if (ability.targetType === 'allies') {
+          // Shield for allies - get positions of all alive ally cards using their actual indices
+          const allies = currentTurn === 'player' ? playerCards : opponentCards
+          targetPositions = allies
+            .map((card, originalIndex) => ({ card, originalIndex }))
+            .filter(({ card }) => card.hp > 0)
+            .map(({ originalIndex }) => {
+              const x = -3 + originalIndex * 2
+              return [x, 0.5, currentTurn === 'player' ? 2 : -2] as [number, number, number]
+            })
         } else if (targetCard) {
           const targetIndex = [...playerCards, ...opponentCards].findIndex(c => c.id === targetCard.id)
           const isPlayerTarget = playerCards.some(c => c.id === targetCard.id)
@@ -247,19 +274,18 @@ export function GameUI() {
 
         const effectType = ability.name === 'Pyroblast' ? 'fireball' :
                           ability.name === 'Lightning Zap' ? 'lightning' :
+                          ability.name === 'Whirlwind Slash' ? 'whirlwind_slash' :
+                          ability.name === 'Sword Strike' ? 'sword_strike' :
+                          ability.effect === 'shield' ? 'shield' :
                           result.visualEffect || 'fire'
-
-        console.log('[GAMEUI] Effect type:', effectType, 'Target positions:', targetPositions)
 
         // For Chaos Shuffle and Battery Drain, calculate positions
         let enemyPositions: [number, number, number][] | undefined
         let allyPositions: [number, number, number][] | undefined
 
         if (effectType === 'battery_drain' || effectType === 'chaos_shuffle') {
-          // Enemy positions - reuse targetPositions from Lightning Zap logic (should already be set for 'all' targetType)
           enemyPositions = targetPositions
 
-          // Ally positions - calculate for Battery Drain
           if (effectType === 'battery_drain') {
             const allies = currentTurn === 'player' ? playerCards : opponentCards
             allyPositions = allies.filter(c => c.hp > 0).map((_, i) => {
@@ -267,24 +293,24 @@ export function GameUI() {
               return [x, 0.5, currentTurn === 'player' ? 2 : -2] as [number, number, number]
             })
           }
-
-          console.log('[VFX DEBUG] Enemy positions:', enemyPositions)
-          console.log('[VFX DEBUG] Ally positions:', allyPositions)
         }
 
-        const effectData: SpellEffectData = {
-          id: `effect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type: effectType,
-          position: sourcePos,
-          targetId: targetCard?.id || '',
-          sourcePosition: sourcePos,
-          targetPosition: targetPos,
-          targetPositions: targetPositions,
-          enemyPositions: enemyPositions,
-          allyPositions: allyPositions
-        }
+        // Dispatch the effect (GameScene will handle rendering multiple shields if targetPositions has multiple items)
+        {
+          const effectData: SpellEffectData = {
+            id: `effect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: effectType,
+            position: sourcePos,
+            targetId: targetCard?.id || '',
+            sourcePosition: sourcePos,
+            targetPosition: targetPos,
+            targetPositions: targetPositions,
+            enemyPositions: enemyPositions,
+            allyPositions: allyPositions
+          }
 
-        window.dispatchEvent(new CustomEvent('spellEffect', { detail: effectData }))
+          window.dispatchEvent(new CustomEvent('spellEffect', { detail: effectData }))
+        }
       }
 
       // Add combat log entry

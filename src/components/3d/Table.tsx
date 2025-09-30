@@ -1,7 +1,7 @@
 import { useRef, useMemo, useLayoutEffect } from 'react'
 import { Mesh, InstancedMesh, Object3D, Color, Matrix4 } from 'three'
 import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useLoader } from '@react-three/fiber'
 import useOptimizedGameStore from '@/stores/optimizedGameStore'
 
 // Component for dynamic health-based hexagon colors
@@ -95,7 +95,20 @@ export function Table() {
   const tableRef = useRef<Mesh>(null)
   const blocksRef = useRef<InstancedMesh>(null)
   const diceRef = useRef<InstancedMesh>(null)
-  const marblesRef = useRef<InstancedMesh>(null)
+
+  // Fixed positions for sports balls (generated once)
+  const ballPositions = useMemo(() => [
+    [4.2, -0.85, -1.5],   // Football white
+    [-3.8, -0.85, 2.1],   // Football black
+    [2.5, -0.85, -2.8],   // Tennis 1
+    [-5.1, -0.85, -0.7],  // Tennis 2
+    [0.5, -0.85, 3.2],    // Basketball
+    [-2.3, -0.85, -3.1],  // Snooker red
+    [5.5, -0.85, 1.8],    // Snooker white
+    [-4.5, -0.85, 3.5],   // Snooker yellow
+    [3.7, -0.85, 0.9],    // Snooker green
+    [-1.2, -0.85, -2.2],  // Snooker blue
+  ], [])
 
   // Create instanced toy blocks around the edges
   const blockCount = 20
@@ -142,22 +155,6 @@ export function Table() {
       blocksRef.current.instanceMatrix.needsUpdate = true
     }
 
-    // Initialize marbles
-    if (marblesRef.current) {
-      const marbleTemp = new Object3D()
-      for (let i = 0; i < 10; i++) {
-        marbleTemp.position.set(
-          (Math.random() - 0.5) * 12,
-          -0.85,
-          (Math.random() - 0.5) * 8
-        )
-        marbleTemp.updateMatrix()
-        marblesRef.current.setMatrixAt(i, marbleTemp.matrix)
-      }
-      if (marblesRef.current.instanceMatrix) {
-        marblesRef.current.instanceMatrix.needsUpdate = true
-      }
-    }
   }, [])
 
   // Animated floating dice
@@ -270,16 +267,54 @@ export function Table() {
         </mesh>
       </group>
 
-      {/* Scattered marbles using instanced mesh for performance */}
-      <instancedMesh ref={marblesRef} args={[undefined, undefined, 10]} castShadow>
-        <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial
-          color="#4ecdc4"
-          roughness={0.1}
-          metalness={0.8}
-          envMapIntensity={2}
-        />
-      </instancedMesh>
+      {/* Scattered sports balls - individual balls for distinct appearance */}
+      {/* Football/Soccer balls */}
+      <mesh position={ballPositions[0] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.18, 16, 16]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.3} />
+      </mesh>
+      <mesh position={ballPositions[1] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.18, 16, 16]} />
+        <meshStandardMaterial color="#000000" roughness={0.3} />
+      </mesh>
+
+      {/* Tennis balls */}
+      <mesh position={ballPositions[2] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.12, 12, 12]} />
+        <meshStandardMaterial color="#ccff00" roughness={0.8} />
+      </mesh>
+      <mesh position={ballPositions[3] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.12, 12, 12]} />
+        <meshStandardMaterial color="#ccff00" roughness={0.8} />
+      </mesh>
+
+      {/* Basketball */}
+      <mesh position={ballPositions[4] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.2, 16, 16]} />
+        <meshStandardMaterial color="#ff7722" roughness={0.6} />
+      </mesh>
+
+      {/* Snooker balls */}
+      <mesh position={ballPositions[5] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.1, 12, 12]} />
+        <meshStandardMaterial color="#cc0000" roughness={0.1} metalness={0.8} />
+      </mesh>
+      <mesh position={ballPositions[6] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.1, 12, 12]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.1} metalness={0.8} />
+      </mesh>
+      <mesh position={ballPositions[7] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.1, 12, 12]} />
+        <meshStandardMaterial color="#ffff00" roughness={0.1} metalness={0.8} />
+      </mesh>
+      <mesh position={ballPositions[8] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.1, 12, 12]} />
+        <meshStandardMaterial color="#00aa00" roughness={0.1} metalness={0.8} />
+      </mesh>
+      <mesh position={ballPositions[9] as [number, number, number]} castShadow>
+        <sphereGeometry args={[0.1, 12, 12]} />
+        <meshStandardMaterial color="#0066ff" roughness={0.1} metalness={0.8} />
+      </mesh>
 
       {/* Center divider line - like a chalk line */}
       <mesh

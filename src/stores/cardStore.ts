@@ -12,11 +12,12 @@ export interface Ability {
 }
 
 export interface Debuff {
-  type: 'frozen' | 'burned' | 'stunned' | 'poisoned' | 'fire_aura'
+  type: 'frozen' | 'burned' | 'stunned' | 'poisoned' | 'fire_aura' | 'shielded'
   duration: number
   damage?: number
   stacks?: number  // For stackable debuffs like Fire Aura
   maxStacks?: number  // Maximum stacks allowed
+  shieldAmount?: number  // For shield debuff
 }
 
 export interface CardData {
@@ -27,6 +28,7 @@ export interface CardData {
   texture: string
   abilities: Ability[]
   debuffs: Debuff[]
+  shield?: number  // Shield amount (damage absorption)
   position?: [number, number, number]
 }
 
@@ -72,8 +74,8 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     texture: '/brickdudenft.webp',
     abilities: [
       { name: 'Sword Strike', description: 'Basic attack', damage: 25, targetType: 'single' },
-      { name: 'Shield Bash', description: 'Damage and stun', damage: 15, effect: 'stun', targetType: 'single' },
-      { name: 'Rally', description: 'Heal all allies', heal: 20, targetType: 'allies' }
+      { name: 'Block Defence', description: 'Shield all allies absorbing 10 damage', effect: 'shield', targetType: 'allies' },
+      { name: 'Whirlwind Slash', description: 'Spin attack damaging all enemies', damage: 20, targetType: 'all' }
     ]
   },
   {

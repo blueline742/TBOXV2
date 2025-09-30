@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
@@ -169,16 +169,16 @@ export function executeAbility(
 
   targets.forEach(target => {
     if (ability.damage) {
-      const shielded = target.debuffs.some(d => d.type === 'frozen')
-      const damage = shielded ? Math.floor(ability.damage / 2) : ability.damage
+      const damage = ability.damage
 
       effects.push({ type: 'damage', targetId: target.id, value: damage })
 
       const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
       damages.push({ cardId: target.id, amount: damage, side })
 
-      if (shielded) {
-        message += ` ${target.name} is shielded (${damage} damage)!`
+      // Check if target has shield (will be absorbed by damageCard function)
+      if (target.shield && target.shield > 0) {
+        message += ` ${target.name}'s shield absorbs ${Math.min(target.shield, damage)} damage!`
       } else {
         message += ` ${target.name} takes ${damage} damage!`
       }
@@ -187,6 +187,8 @@ export function executeAbility(
         visualEffect = 'fire'
       } else if (ability.name === 'Lightning Zap') {
         visualEffect = 'lightning'
+      } else if (ability.name === 'Whirlwind Slash') {
+        visualEffect = 'whirlwind_slash'
       }
     }
 
@@ -257,8 +259,20 @@ export function executeAbility(
       }
 
       if (ability.effect === 'shield') {
-        effects.push({ type: 'effect', targetId: target.id })
-        message += ` ${target.name} gains a shield!`
+        // Apply shield as a debuff (10 damage absorption for Block Defence)
+        const shieldAmount = 10
+        const shieldDebuff: Debuff = {
+          type: 'shielded',
+          duration: 999,  // Persistent until broken
+          shieldAmount: shieldAmount
+        }
+
+        effects.push({ type: 'debuff', targetId: target.id, debuff: shieldDebuff })
+        const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
+        debuffs.push({ cardId: target.id, debuff: shieldDebuff, side })
+
+        message += ` ${target.name} gains a shield (${shieldAmount})!`
+        visualEffect = 'shield' // Use proper shield VFX
       }
 
       // Handle revival
@@ -325,7 +339,7 @@ export function applyAbilityEffects(result: AbilityResult, store: any) {
     store.healCard(side, cardId, amount)
   })
 
-  // Apply debuffs
+  // Apply debuffs (includes shields now)
   result.debuffs?.forEach(({ cardId, debuff, side }) => {
     // console.log('[DEBUG] Applying debuff:', debuff, 'to card:', cardId, 'side:', side)
     store.addDebuff(side, cardId, debuff)

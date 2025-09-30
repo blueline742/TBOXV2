@@ -15,6 +15,8 @@ import { VFXIceNova } from './3d/VFXIceNova'
 import { VFXBatteryDrain } from './3d/VFXBatteryDrain'
 import { VFXChaosShuffle } from './3d/VFXChaosShuffle'
 import { VFXSwordStrike } from './3d/VFXSwordStrike'
+import { VFXWhirlwindSlash } from './3d/VFXWhirlwindSlash'
+import { VFXShieldBubble } from './3d/VFXShieldBubble'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
@@ -51,6 +53,47 @@ export function GameScene() {
     preloadCardTextures()
   }, [])
 
+  // Pre-warm VFX shaders to prevent first-use lag
+  useEffect(() => {
+    const warmupEffects = [
+      {
+        id: 'warmup-whirlwind',
+        type: 'whirlwind_slash',
+        position: [1000, 1000, 1000] as [number, number, number],
+        sourcePosition: [1000, 1000, 1000] as [number, number, number],
+        targetPositions: [[1001, 1000, 1000] as [number, number, number]],
+        targetId: 'warmup'
+      },
+      {
+        id: 'warmup-sword',
+        type: 'sword_strike',
+        position: [1000, 1000, 1000] as [number, number, number],
+        sourcePosition: [1000, 1000, 1000] as [number, number, number],
+        targetPosition: [1001, 1000, 1000] as [number, number, number],
+        targetId: 'warmup'
+      },
+      {
+        id: 'warmup-fireball',
+        type: 'fireball',
+        position: [1000, 1000, 1000] as [number, number, number],
+        sourcePosition: [1000, 1000, 1000] as [number, number, number],
+        targetPosition: [1001, 1000, 1000] as [number, number, number],
+        targetId: 'warmup'
+      }
+    ]
+
+    // Trigger warmup effects after scene loads
+    const timer = setTimeout(() => {
+      warmupEffects.forEach((effect, index) => {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('spellEffect', { detail: effect }))
+        }, index * 50) // Stagger to avoid overwhelming GPU
+      })
+    }, 500) // Wait for scene to be ready
+
+    return () => clearTimeout(timer)
+  }, [])
+
   // Callback for cards to update their screen positions (only for debuff display)
   const handleScreenPositionUpdate = useCallback((cardId: string, side: 'player' | 'opponent', screenPosition: { x: number; y: number }) => {
     setCardPositions(prev => {
@@ -71,7 +114,7 @@ export function GameScene() {
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
@@ -84,12 +127,10 @@ export function GameScene() {
   useEffect(() => {
     const handleSpellEffect = (event: CustomEvent<SpellEffectData>) => {
       const effectData = event.detail
-      // console.log('[GAMESCENE DEBUG] Received spell effect:', effectData)
 
       setActiveEffects(prev => {
         // Check if effect with this ID already exists
         if (prev.some(e => e.id === effectData.id)) {
-          // console.log('[GAMESCENE DEBUG] Effect already exists, skipping:', effectData.id)
           return prev
         }
         return [...prev, {
@@ -98,6 +139,7 @@ export function GameScene() {
           position: effectData.position,
           sourcePosition: effectData.sourcePosition,
           targetPosition: effectData.targetPosition,
+          targetPositions: effectData.targetPositions,
           enemyPositions: effectData.enemyPositions,
           allyPositions: effectData.allyPositions
         }]
@@ -225,7 +267,6 @@ export function GameScene() {
         <VFXSystem />
 
         {activeEffects.map(effect => {
-          console.log('[GAMESCENE] Rendering effect type:', effect.type)
           if (effect.type === 'battery_drain') {
             return (
               <VFXBatteryDrain
@@ -277,6 +318,38 @@ export function GameScene() {
                 key={effect.id}
                 sourcePosition={effect.sourcePosition || effect.position}
                 targetPosition={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'whirlwind_slash') {
+            return (
+              <VFXWhirlwindSlash
+                key={effect.id}
+                position={effect.sourcePosition || effect.position}
+                targetPositions={effect.targetPositions}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'shield') {
+            // If targetPositions exists with multiple positions, render multiple shields
+            if (effect.targetPositions && effect.targetPositions.length > 1) {
+              return effect.targetPositions.map((pos, idx) => (
+                <VFXShieldBubble
+                  key={`${effect.id}-${idx}`}
+                  position={pos}
+                  onComplete={() => {
+                    if (idx === effect.targetPositions!.length - 1) {
+                      removeEffect(effect.id)
+                    }
+                  }}
+                />
+              ))
+            }
+            // Single shield
+            return (
+              <VFXShieldBubble
+                key={effect.id}
+                position={effect.targetPosition || effect.position}
                 onComplete={() => removeEffect(effect.id)}
               />
             )
