@@ -20,6 +20,7 @@ import { VFXWhirlwindSlash } from './3d/VFXWhirlwindSlash'
 import { VFXShieldBubble } from './3d/VFXShieldBubble'
 import { VFXFireBreath } from './3d/VFXFireBreath'
 import { VFXMechaRoar } from './3d/VFXMechaRoar'
+import { VFXExtinctionProtocol } from './3d/VFXExtinctionProtocol'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
@@ -117,7 +118,7 @@ export function GameScene() {
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
@@ -148,8 +149,8 @@ export function GameScene() {
         }]
       })
 
-      // Auto-remove effect after duration
-      const duration = 2000
+      // Auto-remove effect after duration (longer for multi-rocket effects)
+      const duration = effectData.type === 'extinction_protocol' ? 3500 : 2000
       setTimeout(() => {
         removeEffect(effectData.id)
       }, duration)
@@ -349,6 +350,15 @@ export function GameScene() {
                 key={effect.id}
                 position={effect.sourcePosition || effect.position}
                 targetPositions={effect.targetPositions}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'extinction_protocol') {
+            return (
+              <VFXExtinctionProtocol
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPositions={effect.targetPositions || []}
                 onComplete={() => removeEffect(effect.id)}
               />
             )

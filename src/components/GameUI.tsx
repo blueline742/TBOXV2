@@ -235,7 +235,7 @@ export function GameUI() {
       setGameMessage(result.message)
 
       // Create spell effect for visualization
-      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike') {
+      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike' || ability.name === 'Extinction Protocol') {
         const sourceIndex = (currentTurn === 'player' ? playerCards : opponentCards).findIndex(c => c.id === autoSelectedCard.id)
         const sourceX = -3 + sourceIndex * 2
         const sourcePos: [number, number, number] = [sourceX, 0.5, currentTurn === 'player' ? 2 : -2]
@@ -244,14 +244,49 @@ export function GameUI() {
         let targetPositions: [number, number, number][] | undefined
 
         if (ability.targetType === 'all' || ability.name === 'Lightning Zap') {
-          const targets = currentTurn === 'player' ? opponentCards : playerCards
-          targetPositions = targets
-            .map((card, originalIndex) => ({ card, originalIndex }))
-            .filter(({ card }) => card.hp > 0)
-            .map(({ originalIndex }) => {
-              const x = -3 + originalIndex * 2
-              return [x, 0.5, currentTurn === 'player' ? -2 : 2] as [number, number, number]
+          // Special handling for Extinction Protocol - use actual damaged targets
+          if (ability.name === 'Extinction Protocol' && result.damages) {
+            console.log('[EXTINCTION DEBUG] Result damages:', result.damages)
+
+            // Build positions for each damaged card
+            targetPositions = result.damages.map(dmg => {
+              // Determine which side the damaged card is on
+              const isOpponentCard = dmg.side === 'opponent'
+              const cardsArray = isOpponentCard ? opponentCards : playerCards
+
+              // Find the index of the damaged card
+              const cardIndex = cardsArray.findIndex(c => c.id === dmg.cardId)
+
+              console.log('[EXTINCTION DEBUG] Processing damage:', {
+                cardId: dmg.cardId,
+                side: dmg.side,
+                isOpponentCard,
+                cardIndex,
+                cardName: cardsArray[cardIndex]?.name
+              })
+
+              if (cardIndex === -1) {
+                console.error('[EXTINCTION DEBUG] Card not found!', dmg.cardId)
+                return [0, 0.5, 0] as [number, number, number]
+              }
+
+              const x = -3 + cardIndex * 2
+              const z = isOpponentCard ? (currentTurn === 'player' ? -2 : 2) : (currentTurn === 'player' ? 2 : -2)
+
+              return [x, 0.5, z] as [number, number, number]
             })
+
+            console.log('[EXTINCTION DEBUG] Final target positions:', targetPositions)
+          } else {
+            const targets = currentTurn === 'player' ? opponentCards : playerCards
+            targetPositions = targets
+              .map((card, originalIndex) => ({ card, originalIndex }))
+              .filter(({ card }) => card.hp > 0)
+              .map(({ originalIndex }) => {
+                const x = -3 + originalIndex * 2
+                return [x, 0.5, currentTurn === 'player' ? -2 : 2] as [number, number, number]
+              })
+          }
         } else if (ability.targetType === 'allies') {
           // Shield for allies - get positions of all alive ally cards using their actual indices
           const allies = currentTurn === 'player' ? playerCards : opponentCards
@@ -276,6 +311,7 @@ export function GameUI() {
                           ability.name === 'Lightning Zap' ? 'lightning' :
                           ability.name === 'Whirlwind Slash' ? 'whirlwind_slash' :
                           ability.name === 'Sword Strike' ? 'sword_strike' :
+                          ability.name === 'Extinction Protocol' ? 'extinction_protocol' :
                           ability.effect === 'shield' ? 'shield' :
                           result.visualEffect || 'fire'
 

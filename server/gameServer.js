@@ -49,7 +49,7 @@ const toyCards = [
     abilities: [
       { name: 'Fire Breath', description: 'Burn single target', damage: 23, effect: 'burn', targetType: 'single' },
       { name: 'Mecha Roar', description: 'Weaken all enemies (30% less damage for 6 turns)', effect: 'weaken', targetType: 'all' },
-      { name: 'Roar', description: 'Stun all enemies', effect: 'stun', targetType: 'all' }
+      { name: 'Extinction Protocol', description: 'Fire 2 rockets at 2 random enemies dealing massive damage', damage: 45, targetType: 'all' }
     ]
   },
   {
@@ -503,7 +503,15 @@ function executeAbility(room, playerRole, targetId) {
       if (target && target.hp > 0) targets = [target]
       break
     case 'all':
-      targets = opponentCards.filter(c => c.hp > 0)
+      // Special handling for Extinction Protocol - select 2 random targets
+      if (ability.name === 'Extinction Protocol') {
+        const aliveOpponents = opponentCards.filter(c => c.hp > 0)
+        const numTargets = Math.min(2, aliveOpponents.length)
+        const shuffled = [...aliveOpponents].sort(() => Math.random() - 0.5)
+        targets = shuffled.slice(0, numTargets)
+      } else {
+        targets = opponentCards.filter(c => c.hp > 0)
+      }
       break
     case 'self':
       targets = [caster]
@@ -660,6 +668,7 @@ function executeAbility(room, playerRole, targetId) {
     else if (ability.name === 'Chaos Shuffle') effectType = 'chaos_shuffle'
     else if (ability.name === 'Sword Strike') effectType = 'sword_strike'
     else if (ability.name === 'Whirlwind Slash') effectType = 'whirlwind_slash'
+    else if (ability.name === 'Extinction Protocol') effectType = 'extinction_protocol'
 
     const targetPositionsList = targets.map(t => {
       const isOpponent = opponentCards.some(c => c.id === t.id)

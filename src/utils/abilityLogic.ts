@@ -55,7 +55,16 @@ export function executeAbility(
       break
 
     case 'all':
-      targets = allOpponentCards.filter(card => card.hp > 0)
+      // Special handling for Extinction Protocol - select 2 random targets
+      if (ability.name === 'Extinction Protocol') {
+        const aliveOpponents = allOpponentCards.filter(card => card.hp > 0)
+        const numTargets = Math.min(2, aliveOpponents.length)
+        const shuffled = [...aliveOpponents].sort(() => Math.random() - 0.5)
+        targets = shuffled.slice(0, numTargets)
+        console.log('[EXTINCTION LOGIC] Selected targets:', targets.map(t => ({ id: t.id, name: t.name })))
+      } else {
+        targets = allOpponentCards.filter(card => card.hp > 0)
+      }
       break
 
     case 'self':
@@ -181,6 +190,7 @@ export function executeAbility(
 
       const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
       damages.push({ cardId: target.id, amount: damage, side })
+      console.log('[EXTINCTION DAMAGE] Added damage:', { cardId: target.id, amount: damage, side, name: target.name })
 
       // Check if target has shield (will be absorbed by damageCard function)
       if (target.shield && target.shield > 0) {
@@ -197,6 +207,8 @@ export function executeAbility(
         visualEffect = 'lightning'
       } else if (ability.name === 'Whirlwind Slash') {
         visualEffect = 'whirlwind_slash'
+      } else if (ability.name === 'Extinction Protocol') {
+        visualEffect = 'extinction_protocol'
       }
     }
 
@@ -328,7 +340,7 @@ export function executeAbility(
     }
   })
 
-  return {
+  const result = {
     success: true,
     message,
     effects,
@@ -337,6 +349,15 @@ export function executeAbility(
     debuffs,
     visualEffect
   }
+
+  if (ability.name === 'Extinction Protocol') {
+    console.log('[EXTINCTION RESULT] Final result:', {
+      damages: result.damages,
+      visualEffect: result.visualEffect
+    })
+  }
+
+  return result
 }
 
 export function applyAbilityEffects(result: AbilityResult, store: any) {

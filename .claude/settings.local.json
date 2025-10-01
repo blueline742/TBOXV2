@@ -10,7 +10,8 @@
       "Read(//c/Users/samta/OneDrive/Pictures/Screenshots/**)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

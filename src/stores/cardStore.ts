@@ -66,7 +66,7 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     abilities: [
       { name: 'Fire Breath', description: 'Burn single target', damage: 23, effect: 'burn', targetType: 'single' },
       { name: 'Mecha Roar', description: 'Weaken all enemies (30% less damage for 6 turns)', effect: 'weaken', targetType: 'all' },
-      { name: 'Roar', description: 'Stun all enemies', effect: 'stun', targetType: 'all' }
+      { name: 'Extinction Protocol', description: 'Fire 2 rockets at 2 random enemies dealing massive damage', damage: 45, targetType: 'all' }
     ]
   },
   {
