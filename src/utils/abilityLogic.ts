@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
@@ -169,7 +169,13 @@ export function executeAbility(
 
   targets.forEach(target => {
     if (ability.damage) {
-      const damage = ability.damage
+      let damage = ability.damage
+
+      // Apply weakened debuff if caster has it
+      const weakenedDebuff = caster.debuffs.find(d => d.type === 'weakened')
+      if (weakenedDebuff && weakenedDebuff.damageReduction) {
+        damage = Math.floor(damage * (1 - weakenedDebuff.damageReduction))
+      }
 
       effects.push({ type: 'damage', targetId: target.id, value: damage })
 
@@ -183,8 +189,10 @@ export function executeAbility(
         message += ` ${target.name} takes ${damage} damage!`
       }
 
-      if (ability.name === 'Pyroblast' || ability.name === 'Fire Breath') {
+      if (ability.name === 'Pyroblast') {
         visualEffect = 'fire'
+      } else if (ability.name === 'Fire Breath') {
+        visualEffect = 'fire_breath'
       } else if (ability.name === 'Lightning Zap') {
         visualEffect = 'lightning'
       } else if (ability.name === 'Whirlwind Slash') {
@@ -234,7 +242,8 @@ export function executeAbility(
           'freeze': { type: 'frozen', duration: 2 },
           'burn': { type: 'burned', duration: 3, damage: 5 },
           'stun': { type: 'stunned', duration: 1 },
-          'poison': { type: 'poisoned', duration: 4, damage: 3 }
+          'poison': { type: 'poisoned', duration: 4, damage: 3 },
+          'weaken': { type: 'weakened', duration: 6, damageReduction: 0.3 }
         }
 
         const debuff = debuffMap[ability.effect]
@@ -250,6 +259,8 @@ export function executeAbility(
           if (ability.name === 'Ice Nova') {
             // console.log('[ICE NOVA DEBUG] Applying freeze to:', target.name, 'Debuff:', debuff)
             visualEffect = 'ice_nova'
+          } else if (ability.name === 'Mecha Roar') {
+            visualEffect = 'mecha_roar'
           } else if (ability.effect === 'freeze') {
             visualEffect = 'freeze'
           } else if (ability.effect === 'poison') {

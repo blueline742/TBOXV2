@@ -20,7 +20,8 @@ function DebuffOverlayItem({ cardId, side, screenPosition }: DebuffOverlayItemPr
     isPoisoned: card.debuffs.some(d => d.type === 'poisoned'),
     isStunned: card.debuffs.some(d => d.type === 'stunned'),
     hasFireAura: card.debuffs.find(d => d.type === 'fire_aura'),
-    shieldDebuff: card.debuffs.find(d => d.type === 'shielded')
+    shieldDebuff: card.debuffs.find(d => d.type === 'shielded'),
+    isWeakened: card.debuffs.some(d => d.type === 'weakened')
   }
 
   const fireAuraStacks = debuffs.hasFireAura?.stacks || 0
@@ -55,6 +56,7 @@ function DebuffOverlayItem({ cardId, side, screenPosition }: DebuffOverlayItemPr
         )}
         {debuffs.isPoisoned && <span className="text-green-400 text-base drop-shadow-[0_0_4px_rgba(0,255,0,0.8)]">☠️</span>}
         {debuffs.isStunned && <span className="text-yellow-400 text-base drop-shadow-[0_0_4px_rgba(255,255,0,0.8)]">⚡</span>}
+        {debuffs.isWeakened && <span className="text-purple-400 text-base drop-shadow-[0_0_4px_rgba(200,0,255,0.8)]">💔</span>}
       </div>
     </div>
   )

@@ -5,19 +5,20 @@ export interface Ability {
   description: string
   damage?: number
   heal?: number
-  effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison' | 'revive' | 'spell_steal' | 'battery_drain' | 'chaos_shuffle'
+  effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison' | 'revive' | 'spell_steal' | 'battery_drain' | 'chaos_shuffle' | 'weaken'
   targetType: 'single' | 'all' | 'self' | 'allies'
   cooldown?: number
   currentCooldown?: number
 }
 
 export interface Debuff {
-  type: 'frozen' | 'burned' | 'stunned' | 'poisoned' | 'fire_aura' | 'shielded'
+  type: 'frozen' | 'burned' | 'stunned' | 'poisoned' | 'fire_aura' | 'shielded' | 'weakened'
   duration: number
   damage?: number
   stacks?: number  // For stackable debuffs like Fire Aura
   maxStacks?: number  // Maximum stacks allowed
   shieldAmount?: number  // For shield debuff
+  damageReduction?: number  // For weakened debuff (percentage)
 }
 
 export interface CardData {
@@ -63,8 +64,8 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     maxHp: 100,
     texture: '/dinonft.webp',
     abilities: [
-      { name: 'Fire Breath', description: 'Burn single target', damage: 25, effect: 'burn', targetType: 'single' },
-      { name: 'Wing Buffet', description: 'Damage all', damage: 20, targetType: 'all' },
+      { name: 'Fire Breath', description: 'Burn single target', damage: 23, effect: 'burn', targetType: 'single' },
+      { name: 'Mecha Roar', description: 'Weaken all enemies (30% less damage for 6 turns)', effect: 'weaken', targetType: 'all' },
       { name: 'Roar', description: 'Stun all enemies', effect: 'stun', targetType: 'all' }
     ]
   },

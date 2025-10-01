@@ -47,8 +47,8 @@ const toyCards = [
     maxHp: 100,
     texture: '/dinonft.webp',
     abilities: [
-      { name: 'Fire Breath', description: 'Burn single target', damage: 25, effect: 'burn', targetType: 'single' },
-      { name: 'Wing Buffet', description: 'Damage all', damage: 20, targetType: 'all' },
+      { name: 'Fire Breath', description: 'Burn single target', damage: 23, effect: 'burn', targetType: 'single' },
+      { name: 'Mecha Roar', description: 'Weaken all enemies (30% less damage for 6 turns)', effect: 'weaken', targetType: 'all' },
       { name: 'Roar', description: 'Stun all enemies', effect: 'stun', targetType: 'all' }
     ]
   },
@@ -571,6 +571,13 @@ function executeAbility(room, playerRole, targetId) {
     targets.forEach(target => {
       if (ability.damage) {
         let damageAmount = ability.damage
+
+        // Apply weakened debuff if caster has it
+        const weakenedDebuff = caster.debuffs.find(d => d.type === 'weakened')
+        if (weakenedDebuff && weakenedDebuff.damageReduction) {
+          damageAmount = Math.floor(damageAmount * (1 - weakenedDebuff.damageReduction))
+        }
+
         let actualDamage = damageAmount
 
         // Check for shield debuff and absorb damage first
@@ -614,7 +621,8 @@ function executeAbility(room, playerRole, targetId) {
           'burn': { type: 'burned', duration: 3, damage: 5 },
           'stun': { type: 'stunned', duration: 1 },
           'poison': { type: 'poisoned', duration: 4, damage: 3 },
-          'shield': { type: 'shielded', duration: 999, shieldAmount: 10 }
+          'shield': { type: 'shielded', duration: 999, shieldAmount: 10 },
+          'weaken': { type: 'weakened', duration: 6, damageReduction: 0.3 }
         }
         const debuff = debuffMap[ability.effect]
         if (debuff && target.hp > 0) {
@@ -644,6 +652,8 @@ function executeAbility(room, playerRole, targetId) {
     // Determine correct effect type based on ability name
     let effectType = ability.effect || (ability.heal ? 'heal' : 'fire')
     if (ability.name === 'Pyroblast') effectType = 'fireball'
+    else if (ability.name === 'Fire Breath') effectType = 'fire_breath'
+    else if (ability.name === 'Mecha Roar') effectType = 'mecha_roar'
     else if (ability.name === 'Lightning Zap') effectType = 'lightning'
     else if (ability.name === 'Ice Nova') effectType = 'ice_nova'
     else if (ability.name === 'Battery Drain') effectType = 'battery_drain'

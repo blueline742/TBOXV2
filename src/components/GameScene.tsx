@@ -12,11 +12,14 @@ import { Skybox } from './3d/Skybox'
 import { VFXFireball } from './3d/VFXFireball'
 import { VFXLightning } from './3d/VFXLightning'
 import { VFXIceNova } from './3d/VFXIceNova'
+import { VFXIceNovaShockwave } from './3d/VFXIceNovaShockwave'
 import { VFXBatteryDrain } from './3d/VFXBatteryDrain'
 import { VFXChaosShuffle } from './3d/VFXChaosShuffle'
 import { VFXSwordStrike } from './3d/VFXSwordStrike'
 import { VFXWhirlwindSlash } from './3d/VFXWhirlwindSlash'
 import { VFXShieldBubble } from './3d/VFXShieldBubble'
+import { VFXFireBreath } from './3d/VFXFireBreath'
+import { VFXMechaRoar } from './3d/VFXMechaRoar'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
@@ -114,7 +117,7 @@ export function GameScene() {
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
@@ -267,7 +270,25 @@ export function GameScene() {
         <VFXSystem />
 
         {activeEffects.map(effect => {
-          if (effect.type === 'battery_drain') {
+          if (effect.type === 'fire_breath') {
+            return (
+              <VFXFireBreath
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPosition={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'mecha_roar') {
+            return (
+              <VFXMechaRoar
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPositions={effect.targetPositions}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'battery_drain') {
             return (
               <VFXBatteryDrain
                 key={effect.id}
@@ -288,9 +309,10 @@ export function GameScene() {
             )
           } else if (effect.type === 'ice_nova') {
             return (
-              <VFXIceNova
+              <VFXIceNovaShockwave
                 key={effect.id}
-                position={effect.position}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPositions={effect.targetPositions}
                 onComplete={() => removeEffect(effect.id)}
               />
             )
