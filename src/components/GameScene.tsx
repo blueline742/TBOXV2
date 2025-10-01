@@ -21,6 +21,9 @@ import { VFXShieldBubble } from './3d/VFXShieldBubble'
 import { VFXFireBreath } from './3d/VFXFireBreath'
 import { VFXMechaRoar } from './3d/VFXMechaRoar'
 import { VFXExtinctionProtocol } from './3d/VFXExtinctionProtocol'
+import { VFXWaterSquirt } from './3d/VFXWaterSquirt'
+import { VFXBathBomb } from './3d/VFXBathBomb'
+import { VFXDuckSwarm } from './3d/VFXDuckSwarm'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
@@ -118,13 +121,13 @@ export function GameScene() {
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
     targetPositions?: [number, number, number][]  // For multi-target effects
     enemyPositions?: [number, number, number][]  // For Battery Drain
-    allyPositions?: [number, number, number][]  // For Battery Drain
+    allyPositions?: [number, number, number][]  // For Bath Bomb / Battery Drain
   }>>([])
 
   // Listen for spell effects from GameUI
@@ -356,6 +359,33 @@ export function GameScene() {
           } else if (effect.type === 'extinction_protocol') {
             return (
               <VFXExtinctionProtocol
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPositions={effect.targetPositions || []}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'water_squirt') {
+            return (
+              <VFXWaterSquirt
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPosition={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'bath_bomb') {
+            return (
+              <VFXBathBomb
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                allyPositions={effect.allyPositions || []}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'duck_swarm') {
+            return (
+              <VFXDuckSwarm
                 key={effect.id}
                 sourcePosition={effect.sourcePosition || effect.position}
                 targetPositions={effect.targetPositions || []}

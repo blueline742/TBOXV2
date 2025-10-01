@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
@@ -181,9 +181,26 @@ export function executeAbility(
       let damage = ability.damage
 
       // Apply weakened debuff if caster has it
-      const weakenedDebuff = caster.debuffs.find(d => d.type === 'weakened')
+      const weakenedDebuff = sourceCard.debuffs.find(d => d.type === 'weakened')
       if (weakenedDebuff && weakenedDebuff.damageReduction) {
         damage = Math.floor(damage * (1 - weakenedDebuff.damageReduction))
+      }
+
+      // Apply critical hit chance if target is wet
+      const wetDebuff = target.debuffs.find(d => d.type === 'wet')
+      if (wetDebuff && wetDebuff.critChanceIncrease) {
+        const critRoll = Math.random()
+        const critChance = (wetDebuff.stacks || 1) * (wetDebuff.critChanceIncrease || 0.2)
+        if (critRoll < critChance) {
+          damage = Math.floor(damage * 2) // Critical hit doubles damage
+          message += ` CRITICAL HIT!`
+        }
+      }
+
+      // Apply protection buff if target has it
+      const protectedDebuff = target.debuffs.find(d => d.type === 'protected')
+      if (protectedDebuff && protectedDebuff.damageReduction) {
+        damage = Math.floor(damage * (1 - protectedDebuff.damageReduction))
       }
 
       effects.push({ type: 'damage', targetId: target.id, value: damage })
@@ -209,6 +226,8 @@ export function executeAbility(
         visualEffect = 'whirlwind_slash'
       } else if (ability.name === 'Extinction Protocol') {
         visualEffect = 'extinction_protocol'
+      } else if (ability.name === 'Water Squirt') {
+        visualEffect = 'water_squirt'
       }
     }
 
@@ -224,8 +243,47 @@ export function executeAbility(
     }
 
     if (ability.effect) {
+      // Special handling for Bath Bomb
+      if (ability.effect === 'bath_bomb') {
+        const protectedDebuff: Debuff = {
+          type: 'protected',
+          duration: 999, // Permanent for rest of game
+          damageReduction: 0.15 // 15% damage reduction
+        }
+
+        // Only apply if target doesn't already have protection (doesn't stack)
+        const existingProtection = target.debuffs.find(d => d.type === 'protected')
+        if (!existingProtection) {
+          effects.push({ type: 'debuff', targetId: target.id, debuff: protectedDebuff })
+          const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
+          debuffs.push({ cardId: target.id, debuff: protectedDebuff, side })
+        }
+
+        visualEffect = 'bath_bomb'
+      }
+      // Special handling for Water Squirt
+      else if (ability.effect === 'water_squirt') {
+        // Check if target already has wet debuff
+        const existingWet = target.debuffs.find(d => d.type === 'wet')
+        const currentStacks = existingWet?.stacks || 0
+        const newStacks = Math.min(currentStacks + 1, 3) // Max 3 stacks
+
+        const wetDebuff: Debuff = {
+          type: 'wet',
+          duration: 999, // Permanent for rest of game
+          stacks: newStacks,
+          maxStacks: 3,
+          critChanceIncrease: 0.2 // 20% per stack
+        }
+
+        effects.push({ type: 'debuff', targetId: target.id, debuff: wetDebuff })
+        const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
+        debuffs.push({ cardId: target.id, debuff: wetDebuff, side })
+
+        message += ` ${target.name} is soaked! (Wet x${newStacks}, +${newStacks * 20}% crit chance against them)`
+      }
       // Special handling for Fire Aura
-      if (ability.name === 'Fire Aura') {
+      else if (ability.name === 'Fire Aura') {
         const fireAuraDebuff: Debuff = {
           type: 'fire_aura',
           duration: 999,  // Persistent until cleansed or game ends

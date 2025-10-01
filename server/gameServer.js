@@ -67,9 +67,9 @@ const toyCards = [
     maxHp: 70,
     texture: '/duckienft.webp',
     abilities: [
-      { name: 'Shadow Strike', description: 'High damage', damage: 40, targetType: 'single' },
-      { name: 'Smoke Bomb', description: 'Stun all enemies', effect: 'stun', targetType: 'all' },
-      { name: 'Poison Blade', description: 'Poison target', damage: 15, effect: 'poison', targetType: 'single' }
+      { name: 'Water Squirt', description: 'Squirt water at enemy (20 dmg + wet debuff, +20% crit chance, stacks 3x)', damage: 20, effect: 'water_squirt', targetType: 'single' },
+      { name: 'Bath Bomb', description: 'Throw a colorful bath bomb, reduce team damage taken by 15%', effect: 'bath_bomb', targetType: 'allies' },
+      { name: 'Duck Swarm', description: 'Summon a swarm of ducks to attack all enemies', damage: 20, targetType: 'all' }
     ]
   },
   {
@@ -586,6 +586,23 @@ function executeAbility(room, playerRole, targetId) {
           damageAmount = Math.floor(damageAmount * (1 - weakenedDebuff.damageReduction))
         }
 
+        // Apply critical hit chance if target is wet
+        const wetDebuff = target.debuffs.find(d => d.type === 'wet')
+        if (wetDebuff && wetDebuff.critChanceIncrease) {
+          const critRoll = Math.random()
+          const critChance = (wetDebuff.stacks || 1) * (wetDebuff.critChanceIncrease || 0.2)
+          if (critRoll < critChance) {
+            damageAmount = Math.floor(damageAmount * 2) // Critical hit doubles damage
+            console.log(`CRITICAL HIT! ${caster.name} hits ${target.name} for ${damageAmount} damage!`)
+          }
+        }
+
+        // Apply protection buff if target has it (reduces incoming damage)
+        const protectedDebuff = target.debuffs.find(d => d.type === 'protected')
+        if (protectedDebuff && protectedDebuff.damageReduction) {
+          damageAmount = Math.floor(damageAmount * (1 - protectedDebuff.damageReduction))
+        }
+
         let actualDamage = damageAmount
 
         // Check for shield debuff and absorb damage first
@@ -630,16 +647,34 @@ function executeAbility(room, playerRole, targetId) {
           'stun': { type: 'stunned', duration: 1 },
           'poison': { type: 'poisoned', duration: 4, damage: 3 },
           'shield': { type: 'shielded', duration: 999, shieldAmount: 10 },
-          'weaken': { type: 'weakened', duration: 6, damageReduction: 0.3 }
+          'weaken': { type: 'weakened', duration: 6, damageReduction: 0.3 },
+          'water_squirt': { type: 'wet', duration: 999, stacks: 1, maxStacks: 3, critChanceIncrease: 0.2 },
+          'bath_bomb': { type: 'protected', duration: 999, damageReduction: 0.15 }
         }
         const debuff = debuffMap[ability.effect]
         if (debuff && target.hp > 0) {
+          // Check if wet already exists and stack it
+          if (debuff.type === 'wet') {
+            const existingWet = target.debuffs.find(d => d.type === 'wet')
+            if (existingWet) {
+              existingWet.stacks = Math.min((existingWet.stacks || 1) + 1, 3)
+            } else {
+              target.debuffs.push(debuff)
+            }
+          }
           // Check if shield already exists and stack it
-          if (debuff.type === 'shielded') {
+          else if (debuff.type === 'shielded') {
             const existingShield = target.debuffs.find(d => d.type === 'shielded')
             if (existingShield) {
               existingShield.shieldAmount = (existingShield.shieldAmount || 0) + (debuff.shieldAmount || 0)
             } else {
+              target.debuffs.push(debuff)
+            }
+          }
+          // Check if protected already exists - don't stack
+          else if (debuff.type === 'protected') {
+            const existingProtected = target.debuffs.find(d => d.type === 'protected')
+            if (!existingProtected) {
               target.debuffs.push(debuff)
             }
           } else {
@@ -669,6 +704,9 @@ function executeAbility(room, playerRole, targetId) {
     else if (ability.name === 'Sword Strike') effectType = 'sword_strike'
     else if (ability.name === 'Whirlwind Slash') effectType = 'whirlwind_slash'
     else if (ability.name === 'Extinction Protocol') effectType = 'extinction_protocol'
+    else if (ability.name === 'Water Squirt') effectType = 'water_squirt'
+    else if (ability.name === 'Bath Bomb') effectType = 'bath_bomb'
+    else if (ability.name === 'Duck Swarm') effectType = 'duck_swarm'
 
     const targetPositionsList = targets.map(t => {
       const isOpponent = opponentCards.some(c => c.id === t.id)
@@ -695,6 +733,11 @@ function executeAbility(room, playerRole, targetId) {
           return [(-3 + i * 2), 0.5, playerRole === 'player1' ? 2 : -2]
         })
       }
+    }
+
+    // For Bath Bomb, add ally positions (already calculated in targetPositionsList)
+    if (effectType === 'bath_bomb') {
+      visualEffect.allyPositions = targetPositionsList
     }
   }
 

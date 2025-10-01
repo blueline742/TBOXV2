@@ -21,11 +21,14 @@ function DebuffOverlayItem({ cardId, side, screenPosition }: DebuffOverlayItemPr
     isStunned: card.debuffs.some(d => d.type === 'stunned'),
     hasFireAura: card.debuffs.find(d => d.type === 'fire_aura'),
     shieldDebuff: card.debuffs.find(d => d.type === 'shielded'),
-    isWeakened: card.debuffs.some(d => d.type === 'weakened')
+    isWeakened: card.debuffs.some(d => d.type === 'weakened'),
+    wetDebuff: card.debuffs.find(d => d.type === 'wet'),
+    isProtected: card.debuffs.some(d => d.type === 'protected')
   }
 
   const fireAuraStacks = debuffs.hasFireAura?.stacks || 0
   const shieldAmount = debuffs.shieldDebuff?.shieldAmount || 0
+  const wetStacks = debuffs.wetDebuff?.stacks || 0
 
   return (
     <div
@@ -57,6 +60,18 @@ function DebuffOverlayItem({ cardId, side, screenPosition }: DebuffOverlayItemPr
         {debuffs.isPoisoned && <span className="text-green-400 text-base drop-shadow-[0_0_4px_rgba(0,255,0,0.8)]">☠️</span>}
         {debuffs.isStunned && <span className="text-yellow-400 text-base drop-shadow-[0_0_4px_rgba(255,255,0,0.8)]">⚡</span>}
         {debuffs.isWeakened && <span className="text-purple-400 text-base drop-shadow-[0_0_4px_rgba(200,0,255,0.8)]">💔</span>}
+        {debuffs.wetDebuff && (
+          <div className="flex items-center gap-0.5 bg-blue-400/20 px-1.5 py-0.5 rounded border border-blue-400/50">
+            <span className="text-blue-300 text-base drop-shadow-[0_0_4px_rgba(100,150,255,0.8)]">💧</span>
+            {wetStacks > 1 && <span className="text-xs font-bold text-blue-100 drop-shadow-[0_0_2px_rgba(150,200,255,0.8)]">{wetStacks}</span>}
+          </div>
+        )}
+        {debuffs.isProtected && (
+          <div className="flex items-center gap-0.5 bg-pink-400/20 px-1.5 py-0.5 rounded border border-pink-400/50">
+            <span className="text-pink-300 text-base drop-shadow-[0_0_4px_rgba(255,100,200,0.8)]">✨</span>
+            <span className="text-xs font-bold text-pink-100 drop-shadow-[0_0_2px_rgba(255,150,200,0.8)]">-15%</span>
+          </div>
+        )}
       </div>
     </div>
   )

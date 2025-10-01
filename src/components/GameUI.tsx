@@ -18,14 +18,14 @@ import { preloadTurnSounds, playYourTurnSound } from '@/utils/soundPlayer'
 
 export interface SpellEffectData {
   id: string
-  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar'
+  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm'
   position: [number, number, number]
   targetId: string
   sourcePosition?: [number, number, number]
   targetPosition?: [number, number, number]
   targetPositions?: [number, number, number][]
   enemyPositions?: [number, number, number][]  // For Battery Drain
-  allyPositions?: [number, number, number][]  // For Battery Drain
+  allyPositions?: [number, number, number][]  // For Battery Drain and Bath Bomb
 }
 
 export function GameUI() {
@@ -235,7 +235,7 @@ export function GameUI() {
       setGameMessage(result.message)
 
       // Create spell effect for visualization
-      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike' || ability.name === 'Extinction Protocol') {
+      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike' || ability.name === 'Extinction Protocol' || ability.name === 'Bath Bomb' || ability.name === 'Duck Swarm') {
         const sourceIndex = (currentTurn === 'player' ? playerCards : opponentCards).findIndex(c => c.id === autoSelectedCard.id)
         const sourceX = -3 + sourceIndex * 2
         const sourcePos: [number, number, number] = [sourceX, 0.5, currentTurn === 'player' ? 2 : -2]
@@ -312,10 +312,13 @@ export function GameUI() {
                           ability.name === 'Whirlwind Slash' ? 'whirlwind_slash' :
                           ability.name === 'Sword Strike' ? 'sword_strike' :
                           ability.name === 'Extinction Protocol' ? 'extinction_protocol' :
+                          ability.name === 'Water Squirt' ? 'water_squirt' :
+                          ability.name === 'Bath Bomb' ? 'bath_bomb' :
+                          ability.name === 'Duck Swarm' ? 'duck_swarm' :
                           ability.effect === 'shield' ? 'shield' :
                           result.visualEffect || 'fire'
 
-        // For Chaos Shuffle and Battery Drain, calculate positions
+        // For Chaos Shuffle, Battery Drain, and Bath Bomb, calculate positions
         let enemyPositions: [number, number, number][] | undefined
         let allyPositions: [number, number, number][] | undefined
 
@@ -329,6 +332,11 @@ export function GameUI() {
               return [x, 0.5, currentTurn === 'player' ? 2 : -2] as [number, number, number]
             })
           }
+        }
+
+        // Bath Bomb ally positions (using targetPositions from allies)
+        if (effectType === 'bath_bomb') {
+          allyPositions = targetPositions
         }
 
         // Dispatch the effect (GameScene will handle rendering multiple shields if targetPositions has multiple items)

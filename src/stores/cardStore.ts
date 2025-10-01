@@ -5,20 +5,21 @@ export interface Ability {
   description: string
   damage?: number
   heal?: number
-  effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison' | 'revive' | 'spell_steal' | 'battery_drain' | 'chaos_shuffle' | 'weaken'
+  effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison' | 'revive' | 'spell_steal' | 'battery_drain' | 'chaos_shuffle' | 'weaken' | 'water_squirt' | 'bath_bomb'
   targetType: 'single' | 'all' | 'self' | 'allies'
   cooldown?: number
   currentCooldown?: number
 }
 
 export interface Debuff {
-  type: 'frozen' | 'burned' | 'stunned' | 'poisoned' | 'fire_aura' | 'shielded' | 'weakened'
+  type: 'frozen' | 'burned' | 'stunned' | 'poisoned' | 'fire_aura' | 'shielded' | 'weakened' | 'wet' | 'protected'
   duration: number
   damage?: number
-  stacks?: number  // For stackable debuffs like Fire Aura
+  stacks?: number  // For stackable debuffs like Fire Aura and Wet
   maxStacks?: number  // Maximum stacks allowed
   shieldAmount?: number  // For shield debuff
-  damageReduction?: number  // For weakened debuff (percentage)
+  damageReduction?: number  // For weakened debuff (percentage) or protected buff (percentage)
+  critChanceIncrease?: number  // For wet debuff (percentage increase in crit chance)
 }
 
 export interface CardData {
@@ -84,9 +85,9 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     maxHp: 70,
     texture: '/duckienft.webp',
     abilities: [
-      { name: 'Shadow Strike', description: 'High damage', damage: 40, targetType: 'single' },
-      { name: 'Smoke Bomb', description: 'Stun all enemies', effect: 'stun', targetType: 'all' },
-      { name: 'Poison Blade', description: 'Poison target', damage: 15, effect: 'poison', targetType: 'single' }
+      { name: 'Water Squirt', description: 'Squirt water at enemy (20 dmg + wet debuff, +20% crit chance, stacks 3x)', damage: 20, effect: 'water_squirt', targetType: 'single' },
+      { name: 'Bath Bomb', description: 'Throw a colorful bath bomb, reduce team damage taken by 15%', effect: 'bath_bomb', targetType: 'allies' },
+      { name: 'Duck Swarm', description: 'Summon a swarm of ducks to attack all enemies', damage: 20, targetType: 'all' }
     ]
   },
   {
