@@ -3,6 +3,9 @@ import { Mesh, InstancedMesh, Object3D, Color, Matrix4 } from 'three'
 import * as THREE from 'three'
 import { useFrame, useLoader } from '@react-three/fiber'
 import useOptimizedGameStore from '@/stores/optimizedGameStore'
+import { FloatingToyPlanes } from './FloatingToyPlanes'
+import { InstancedToyDucks } from './InstancedToyDucks'
+import { InstancedToyMix } from './InstancedToyMix'
 
 // Component for dynamic health-based hexagon colors
 function HealthHexagons() {
@@ -93,8 +96,6 @@ function HealthHexagons() {
 
 export function Table() {
   const tableRef = useRef<Mesh>(null)
-  const blocksRef = useRef<InstancedMesh>(null)
-  const diceRef = useRef<InstancedMesh>(null)
 
   // Fixed positions for sports balls (generated once)
   const ballPositions = useMemo(() => [
@@ -110,56 +111,12 @@ export function Table() {
     [-1.2, -0.85, -2.2],  // Snooker blue
   ], [])
 
-  // Create instanced toy blocks around the edges
-  const blockCount = 20
+  // Removed instanced toy blocks - replaced with 3D models
 
-  // Initialize block transforms and colors after mount
-  useLayoutEffect(() => {
-    if (!blocksRef.current) return
-
-    const temp = new Object3D()
-    const colors = [
-      new Color('#ff6b6b'), // red
-      new Color('#4ecdc4'), // teal
-      new Color('#45b7d1'), // blue
-      new Color('#f9ca24'), // yellow
-      new Color('#6c5ce7'), // purple
-      new Color('#a29bfe'), // lavender
-    ]
-
-    for (let i = 0; i < blockCount; i++) {
-      const angle = (i / blockCount) * Math.PI * 2
-      const radius = 6 + Math.random() * 0.5
-      const x = Math.cos(angle) * radius
-      const z = Math.sin(angle) * radius
-      const y = -0.8 + Math.random() * 0.2
-
-      temp.position.set(x, y, z)
-      temp.rotation.set(
-        Math.random() * 0.3,
-        Math.random() * Math.PI * 2,
-        Math.random() * 0.3
-      )
-      temp.scale.setScalar(0.3 + Math.random() * 0.2)
-      temp.updateMatrix()
-
-      blocksRef.current.setMatrixAt(i, temp.matrix)
-      const color = colors[Math.floor(Math.random() * colors.length)]
-      blocksRef.current.setColorAt(i, color)
-    }
-
-    if (blocksRef.current.instanceColor) {
-      blocksRef.current.instanceColor.needsUpdate = true
-    }
-    if (blocksRef.current.instanceMatrix) {
-      blocksRef.current.instanceMatrix.needsUpdate = true
-    }
-
-  }, [])
-
-  // Animated floating dice
+  // Removed animated dice - replaced with planes
   useFrame(({ clock }) => {
-    if (diceRef.current) {
+    // Dice animation removed
+    if (false && diceRef.current) {
       diceRef.current.rotation.x = Math.sin(clock.elapsedTime * 0.5) * 0.1
       diceRef.current.rotation.y = clock.elapsedTime * 0.3
     }
@@ -240,32 +197,9 @@ export function Table() {
       {/* Card placement guides - now with dynamic health colors */}
       <HealthHexagons />
 
-      {/* Instanced toy blocks scattered around */}
-      <instancedMesh
-        ref={blocksRef}
-        args={[undefined, undefined, blockCount]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial
-          roughness={0.3}
-          metalness={0.1}
-          vertexColors
-        />
-      </instancedMesh>
+      {/* Instanced toy blocks - removed and replaced with 3D models */}
 
-      {/* Decorative dice */}
-      <group ref={diceRef}>
-        <mesh position={[-5.5, -0.5, 0]} castShadow>
-          <boxGeometry args={[0.4, 0.4, 0.4]} />
-          <meshStandardMaterial color="#f9ca24" roughness={0.3} />
-        </mesh>
-        <mesh position={[5.5, -0.5, 0]} castShadow>
-          <boxGeometry args={[0.4, 0.4, 0.4]} />
-          <meshStandardMaterial color="#ff6b6b" roughness={0.3} />
-        </mesh>
-      </group>
+      {/* Decorative dice - removed and replaced with 3D plane models */}
 
       {/* Scattered sports balls - individual balls for distinct appearance */}
       {/* Football/Soccer balls */}
@@ -330,6 +264,11 @@ export function Table() {
         <ringGeometry args={[0.5, 0.7, 8]} />
         <meshBasicMaterial color="#9f6022ff" opacity={0.9} transparent />
       </mesh>
+
+      {/* Decorative 3D models */}
+      <FloatingToyPlanes />
+      <InstancedToyDucks />
+      <InstancedToyMix />
     </group>
   )
 }
