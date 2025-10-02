@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import useOptimizedGameStore, { useCard, useSelection, useGamePhase, useCurrentTurn, useAutoBattle } from '@/stores/optimizedGameStore'
 import { CardData } from '@/stores/cardStore'
 import { FireAuraEffect } from './FireAuraEffect'
+import { IceAuraEffect } from './IceAuraEffect'
 import { DamageNumbers } from './DamageNumbers'
 import { useCardTexture } from '@/utils/texturePreloader'
 
@@ -196,6 +197,14 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
       {/* Fire Aura Effect */}
       {hasFireAura && fireAuraStacks > 0 && !isDead && (
         <FireAuraEffect stacks={fireAuraStacks} />
+      )}
+
+      {/* Ice Aura Effect for Frozen Cards */}
+      {isFrozen && !isDead && (
+        <>
+          {console.log(`[ICE AURA] Rendering for ${card.name}, frozen:`, isFrozen)}
+          <IceAuraEffect />
+        </>
       )}
 
       {/* Damage Numbers - Always active to show damage/healing */}
