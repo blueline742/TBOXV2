@@ -10,7 +10,13 @@ app.use(express.json())
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3003", "http://localhost:3002"],
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3003",
+      "http://localhost:3002",
+      /\.netlify\.app$/, // Allow all Netlify URLs
+      /\.render\.com$/ // Allow Render URLs
+    ],
     methods: ["GET", "POST"],
     credentials: true
   }

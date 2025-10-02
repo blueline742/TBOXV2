@@ -4,6 +4,8 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import useMultiplayerStore from '@/stores/multiplayerStore'
 import { useEffect, useState } from 'react'
 
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002'
+
 export function MultiplayerLobby() {
   const { publicKey, connected } = useWallet()
   const {
@@ -154,10 +156,10 @@ export function MultiplayerLobby() {
               <div className="text-center">
                 <p className="text-gray-300 mb-4">Not connected to game server</p>
                 <button
-                  onClick={() => connectToServer('http://localhost:3002')}
+                  onClick={() => connectToServer(SOCKET_URL)}
                   className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg transition-colors font-bold"
                 >
-                  Connect to Local Server
+                  Connect to Game Server
                 </button>
               </div>
             )}

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: toybox-brawl-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server/gameServer.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
