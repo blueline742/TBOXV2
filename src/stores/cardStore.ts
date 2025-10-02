@@ -51,12 +51,12 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     ]
   },
   {
-    name: 'Robot',
+    name: 'Robot Guardian',
     maxHp: 120,
     texture: '/robotnft.webp',
     abilities: [
       { name: 'Laser Beam', description: 'High damage', damage: 30, targetType: 'single' },
-      { name: 'Shield Mode', description: 'Shield self', effect: 'shield', targetType: 'self' },
+      { name: 'Shield Boost', description: 'Shield all allies absorbing 15 damage', effect: 'shield', targetType: 'allies' },
       { name: 'EMP Blast', description: 'Stun all enemies', effect: 'stun', targetType: 'all' }
     ]
   },

@@ -24,6 +24,8 @@ import { VFXExtinctionProtocol } from './3d/VFXExtinctionProtocol'
 import { VFXWaterSquirt } from './3d/VFXWaterSquirt'
 import { VFXBathBomb } from './3d/VFXBathBomb'
 import { VFXDuckSwarm } from './3d/VFXDuckSwarm'
+import { VFXLaserBeam } from './3d/VFXLaserBeam'
+import { VFXShieldBoost } from './3d/VFXShieldBoost'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
@@ -121,7 +123,7 @@ export function GameScene() {
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
@@ -389,6 +391,38 @@ export function GameScene() {
                 key={effect.id}
                 sourcePosition={effect.sourcePosition || effect.position}
                 targetPositions={effect.targetPositions || []}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'laser_beam') {
+            return (
+              <VFXLaserBeam
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPosition={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'shield_boost') {
+            // Check for multiple targets (allies)
+            if (effect.targetPositions && effect.targetPositions.length > 1) {
+              return effect.targetPositions.map((pos, idx) => (
+                <VFXShieldBoost
+                  key={`${effect.id}-${idx}`}
+                  position={pos}
+                  onComplete={() => {
+                    if (idx === effect.targetPositions!.length - 1) {
+                      removeEffect(effect.id)
+                    }
+                  }}
+                />
+              ))
+            }
+            // Single target fallback
+            return (
+              <VFXShieldBoost
+                key={effect.id}
+                position={effect.targetPosition || effect.position}
                 onComplete={() => removeEffect(effect.id)}
               />
             )

@@ -18,7 +18,7 @@ import { preloadTurnSounds, playYourTurnSound } from '@/utils/soundPlayer'
 
 export interface SpellEffectData {
   id: string
-  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm'
+  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost'
   position: [number, number, number]
   targetId: string
   sourcePosition?: [number, number, number]
@@ -235,7 +235,7 @@ export function GameUI() {
       setGameMessage(result.message)
 
       // Create spell effect for visualization
-      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike' || ability.name === 'Extinction Protocol' || ability.name === 'Bath Bomb' || ability.name === 'Duck Swarm') {
+      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike' || ability.name === 'Extinction Protocol' || ability.name === 'Bath Bomb' || ability.name === 'Duck Swarm' || ability.name === 'Laser Beam') {
         const sourceIndex = (currentTurn === 'player' ? playerCards : opponentCards).findIndex(c => c.id === autoSelectedCard.id)
         const sourceX = -3 + sourceIndex * 2
         const sourcePos: [number, number, number] = [sourceX, 0.5, currentTurn === 'player' ? 2 : -2]
@@ -315,6 +315,8 @@ export function GameUI() {
                           ability.name === 'Water Squirt' ? 'water_squirt' :
                           ability.name === 'Bath Bomb' ? 'bath_bomb' :
                           ability.name === 'Duck Swarm' ? 'duck_swarm' :
+                          ability.name === 'Laser Beam' ? 'laser_beam' :
+                          ability.name === 'Shield Boost' ? 'shield_boost' :
                           ability.effect === 'shield' ? 'shield' :
                           result.visualEffect || 'fire'
 

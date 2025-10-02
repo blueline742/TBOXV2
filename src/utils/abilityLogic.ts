@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' | 'laser_beam' | 'shield_boost' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
@@ -228,6 +228,8 @@ export function executeAbility(
         visualEffect = 'extinction_protocol'
       } else if (ability.name === 'Water Squirt') {
         visualEffect = 'water_squirt'
+      } else if (ability.name === 'Laser Beam') {
+        visualEffect = 'laser_beam'
       }
     }
 
@@ -340,8 +342,8 @@ export function executeAbility(
       }
 
       if (ability.effect === 'shield') {
-        // Apply shield as a debuff (10 damage absorption for Block Defence)
-        const shieldAmount = 10
+        // Apply shield as a debuff - amount depends on ability
+        const shieldAmount = ability.name === 'Shield Boost' ? 15 : 10
         const shieldDebuff: Debuff = {
           type: 'shielded',
           duration: 999,  // Persistent until broken
@@ -353,7 +355,7 @@ export function executeAbility(
         debuffs.push({ cardId: target.id, debuff: shieldDebuff, side })
 
         message += ` ${target.name} gains a shield (${shieldAmount})!`
-        visualEffect = 'shield' // Use proper shield VFX
+        visualEffect = ability.name === 'Shield Boost' ? 'shield_boost' : 'shield' // Use dark blue shield for Robot Guardian
       }
 
       // Handle revival
