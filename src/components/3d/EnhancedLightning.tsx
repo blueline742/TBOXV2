@@ -110,7 +110,6 @@ export function EnhancedLightning({
           nbParticles: 10000,
           gravity: [0, -2, 0], // Slight downward gravity for sparks
           fadeSize: [0.2, 0.8], // Fade in and out
-          fadeOpacity: [0.1, 0.9],
           renderMode: 'Billboard' as any,
           intensity: 5, // Bright electric particles
         }}
