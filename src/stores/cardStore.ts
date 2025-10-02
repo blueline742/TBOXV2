@@ -57,7 +57,7 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     abilities: [
       { name: 'Laser Beam', description: 'High damage', damage: 30, targetType: 'single' },
       { name: 'Shield Boost', description: 'Shield all allies absorbing 15 damage', effect: 'shield', targetType: 'allies' },
-      { name: 'EMP Blast', description: 'Stun all enemies', effect: 'stun', targetType: 'all' }
+      { name: 'Recharge Batteries', description: 'Revive all defeated allies with 20% HP', effect: 'revive', targetType: 'dead_allies' }
     ]
   },
   {

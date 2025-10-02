@@ -69,11 +69,13 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
   const selectedCard = activeCardId ? [...Array.from(useOptimizedGameStore.getState().playerCards.values()), ...Array.from(useOptimizedGameStore.getState().opponentCards.values())].find(c => c.id === activeCardId) : null
   const selectedAbility = selectedCard && autoSelectedAbilityIndex !== null ? selectedCard.abilities[autoSelectedAbilityIndex] : null
   const isAllyTargetingAbility = selectedAbility?.targetType === 'allies'
+  const isDeadAllyTargetingAbility = selectedAbility?.targetType === 'dead_allies'
 
-  // Allow targeting allies if ally-targeting ability is selected, otherwise only opponents
-  const canBeTargeted = phase === 'player_turn' && !isDead && (
-    (side === 'opponent' && !isAllyTargetingAbility) ||
-    (side === 'player' && isAllyTargetingAbility)
+  // Allow targeting allies if ally-targeting ability is selected, dead allies if revival ability, otherwise only opponents
+  const canBeTargeted = phase === 'player_turn' && (
+    (side === 'opponent' && !isDead && !isAllyTargetingAbility && !isDeadAllyTargetingAbility) ||
+    (side === 'player' && !isDead && isAllyTargetingAbility) ||
+    (side === 'player' && isDead && isDeadAllyTargetingAbility)
   )
 
   // Load the actual card texture from preloaded cache

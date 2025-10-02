@@ -39,7 +39,7 @@ const toyCards = [
     abilities: [
       { name: 'Laser Beam', description: 'High damage', damage: 30, targetType: 'single' },
       { name: 'Shield Boost', description: 'Shield all allies absorbing 15 damage', effect: 'shield', targetType: 'allies' },
-      { name: 'EMP Blast', description: 'Stun all enemies', effect: 'stun', targetType: 'all' }
+      { name: 'Recharge Batteries', description: 'Revive all defeated allies with 20% HP', effect: 'revive', targetType: 'dead_allies' }
     ]
   },
   {
@@ -519,6 +519,9 @@ function executeAbility(room, playerRole, targetId) {
     case 'allies':
       targets = cards.filter(c => c.hp > 0)
       break
+    case 'dead_allies':
+      targets = cards.filter(c => c.hp <= 0)
+      break
   }
 
   // Special abilities
@@ -568,12 +571,12 @@ function executeAbility(room, playerRole, targetId) {
       })
     }
   } else if (ability.effect === 'revive') {
-    // Revive a fallen ally with 50% HP
-    const deadAlly = cards.find(c => c.id === targetId && c.hp <= 0)
-    if (deadAlly) {
-      deadAlly.hp = Math.floor(deadAlly.maxHp * 0.5)
-      heals.push({ cardId: deadAlly.id, amount: deadAlly.hp })
-    }
+    // Revive fallen allies with 20% HP (targets already filtered by dead_allies)
+    targets.forEach(deadAlly => {
+      const reviveAmount = Math.floor(deadAlly.maxHp * 0.2)
+      deadAlly.hp = reviveAmount
+      heals.push({ cardId: deadAlly.id, amount: reviveAmount })
+    })
   } else {
     // Apply standard effects
     targets.forEach(target => {
@@ -710,6 +713,7 @@ function executeAbility(room, playerRole, targetId) {
     else if (ability.name === 'Duck Swarm') effectType = 'duck_swarm'
     else if (ability.name === 'Laser Beam') effectType = 'laser_beam'
     else if (ability.name === 'Shield Boost') effectType = 'shield_boost'
+    else if (ability.name === 'Recharge Batteries') effectType = 'resurrection'
 
     const targetPositionsList = targets.map(t => {
       const isOpponent = opponentCards.some(c => c.id === t.id)
