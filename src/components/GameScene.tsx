@@ -30,9 +30,10 @@ import { VFXResurrection } from './3d/VFXResurrection'
 import VFXSystem from './vfx/VFXSystem'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
-import { preloadCardTextures } from '@/utils/texturePreloader'
+import { preloadCardTextures, preloadSceneAssets } from '@/utils/texturePreloader'
 import { CardOverlay, CardPosition } from './CardOverlay'
 import { DynamicCamera } from './3d/DynamicCamera'
+import { LoadingScreen } from './LoadingScreen'
 
 export function GameScene() {
   const store = useOptimizedGameStore()
@@ -58,9 +59,10 @@ export function GameScene() {
     return () => window.removeEventListener('resize', updateFov)
   }, [])
 
-  // Preload all textures on mount
+  // Preload all textures and scene assets on mount
   useEffect(() => {
     preloadCardTextures()
+    preloadSceneAssets()
   }, [])
 
   // Pre-warm VFX shaders to prevent first-use lag
@@ -184,6 +186,7 @@ export function GameScene() {
 
   return (
     <>
+    <LoadingScreen />
     <Canvas shadows className="w-full h-full">
       <PerspectiveCamera makeDefault position={[0, 8, 10]} fov={fov} />
       <DynamicCamera />

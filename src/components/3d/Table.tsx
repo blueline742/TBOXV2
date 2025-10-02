@@ -6,6 +6,7 @@ import useOptimizedGameStore from '@/stores/optimizedGameStore'
 import { FloatingToyPlanes } from './FloatingToyPlanes'
 import { InstancedToyDucks } from './InstancedToyDucks'
 import { InstancedToyMix } from './InstancedToyMix'
+import { LogoBanner } from './LogoBanner'
 
 // Component for dynamic health-based hexagon colors
 function HealthHexagons() {
@@ -269,6 +270,9 @@ export function Table() {
       <FloatingToyPlanes />
       <InstancedToyDucks />
       <InstancedToyMix />
+
+      {/* Logo Banner */}
+      <LogoBanner />
     </group>
   )
 }
