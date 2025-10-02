@@ -39,7 +39,7 @@ function DebuffOverlayItem({ cardId, side, screenPosition }: DebuffOverlayItemPr
         transform: 'translate(-50%, -50%)'
       }}
     >
-      <div className="flex gap-1.5 bg-black/80 px-2.5 py-1.5 rounded-lg shadow-lg border border-white/10">
+      <div className="flex gap-1.5 px-2.5 py-1.5 rounded-lg">
         {/* Shield buff - Prominent display */}
         {debuffs.shieldDebuff && shieldAmount > 0 && (
           <div className="flex items-center gap-1 bg-blue-500/20 px-1.5 py-0.5 rounded border border-cyan-400/50">
