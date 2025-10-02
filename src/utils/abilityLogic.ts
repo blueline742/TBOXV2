@@ -290,30 +290,33 @@ export function executeAbility(
 
         message += ` ${target.name} is soaked! (Wet x${newStacks}, +${newStacks * 20}% crit chance against them)`
       }
-      // Special handling for Fire Aura
+      // Special handling for Fire Aura - hits all enemies with fire breath VFX
       else if (ability.name === 'Fire Aura') {
-        const fireAuraDebuff: Debuff = {
-          type: 'fire_aura',
-          duration: 999,  // Persistent until cleansed or game ends
-          damage: 5,      // Base damage, will be multiplied by stacks
-          stacks: 1,
-          maxStacks: 3
-        }
+        visualEffect = 'fire_breath' // Use fire breath VFX instead of basic fire
 
-        effects.push({ type: 'debuff', targetId: target.id, debuff: fireAuraDebuff })
-        const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'
-        debuffs.push({ cardId: target.id, debuff: fireAuraDebuff, side })
+        // Apply to all opponent targets
+        allOpponentCards.filter(card => card.hp > 0).forEach(enemyTarget => {
+          const fireAuraDebuff: Debuff = {
+            type: 'fire_aura',
+            duration: 999,  // Persistent until card is defeated
+            damage: 5,      // Base damage, will be multiplied by stacks
+            stacks: 1,
+            maxStacks: 3
+          }
 
-        // Check if target already has fire aura to customize message
-        const existingFireAura = target.debuffs.find(d => d.type === 'fire_aura')
-        if (existingFireAura && existingFireAura.stacks) {
-          const newStacks = Math.min((existingFireAura.stacks || 1) + 1, 3)
-          message += ` ${target.name}'s Fire Aura intensifies (${newStacks} stacks)!`
-        } else {
-          message += ` ${target.name} is engulfed in Fire Aura!`
-        }
+          effects.push({ type: 'debuff', targetId: enemyTarget.id, debuff: fireAuraDebuff })
+          const side = allPlayerCards.find(c => c.id === enemyTarget.id) ? 'player' : 'opponent'
+          debuffs.push({ cardId: enemyTarget.id, debuff: fireAuraDebuff, side })
 
-        visualEffect = 'fire'
+          // Check if target already has fire aura to customize message
+          const existingFireAura = enemyTarget.debuffs.find(d => d.type === 'fire_aura')
+          if (existingFireAura && existingFireAura.stacks) {
+            const newStacks = Math.min((existingFireAura.stacks || 1) + 1, 3)
+            message += ` ${enemyTarget.name}'s Fire Aura intensifies (${newStacks} stacks)!`
+          } else {
+            message += ` ${enemyTarget.name} is engulfed in Fire Aura!`
+          }
+        })
       } else {
         // Normal debuff handling
         const debuffMap: Record<string, Debuff> = {

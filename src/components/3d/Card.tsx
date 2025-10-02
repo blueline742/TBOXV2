@@ -136,13 +136,13 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
     if (damageFlash) return '#ff0000' // Red flash on damage
     if (healFlash) return '#00ff00'   // Green flash on heal
     if (isDead) return '#333333'
-    if (hasFireAura) {
-      // Intensify orange glow based on stacks
-      const intensity = fireAuraStacks
-      return intensity === 3 ? '#ff4500' : intensity === 2 ? '#ff6600' : '#ff8800'
-    }
+    // Fire Aura and Burned use visual effects, no border color needed
+    // if (hasFireAura) {
+    //   const intensity = fireAuraStacks
+    //   return intensity === 3 ? '#ff4500' : intensity === 2 ? '#ff6600' : '#ff8800'
+    // }
+    // if (isBurned) return '#FF6B6B'
     if (isFrozen) return '#4FC3F7'
-    if (isBurned) return '#FF6B6B'
     if (isPoisoned) return '#66BB6A'
     if (isStunned) return '#FFB74D'
     return '#ffffff'

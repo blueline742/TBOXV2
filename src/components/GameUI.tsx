@@ -235,7 +235,7 @@ export function GameUI() {
       setGameMessage(result.message)
 
       // Create spell effect for visualization
-      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike' || ability.name === 'Extinction Protocol' || ability.name === 'Bath Bomb' || ability.name === 'Duck Swarm' || ability.name === 'Laser Beam' || ability.name === 'Recharge Batteries') {
+      if (result.visualEffect || ability.effect === 'shield' || ability.name === 'Pyroblast' || ability.name === 'Lightning Zap' || ability.name === 'Chaos Shuffle' || ability.name === 'Battery Drain' || ability.name === 'Whirlwind Slash' || ability.name === 'Sword Strike' || ability.name === 'Extinction Protocol' || ability.name === 'Bath Bomb' || ability.name === 'Duck Swarm' || ability.name === 'Laser Beam' || ability.name === 'Recharge Batteries' || ability.name === 'Fire Aura') {
         const sourceIndex = (currentTurn === 'player' ? playerCards : opponentCards).findIndex(c => c.id === autoSelectedCard.id)
         const sourceX = -3 + sourceIndex * 2
         const sourcePos: [number, number, number] = [sourceX, 0.5, currentTurn === 'player' ? 2 : -2]
@@ -318,15 +318,22 @@ export function GameUI() {
                           ability.name === 'Laser Beam' ? 'laser_beam' :
                           ability.name === 'Shield Boost' ? 'shield_boost' :
                           ability.name === 'Recharge Batteries' ? 'resurrection' :
+                          ability.name === 'Fire Aura' ? 'fire_breath' :
                           ability.effect === 'shield' ? 'shield' :
                           result.visualEffect || 'fire'
 
-        // For Chaos Shuffle, Battery Drain, and Bath Bomb, calculate positions
+        // For Chaos Shuffle, Battery Drain, Fire Aura, and Bath Bomb, calculate positions
         let enemyPositions: [number, number, number][] | undefined
         let allyPositions: [number, number, number][] | undefined
 
-        if (effectType === 'battery_drain' || effectType === 'chaos_shuffle') {
+        if (effectType === 'battery_drain' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
           enemyPositions = targetPositions
+
+          console.log('[FIRE AURA DEBUG] Setting enemyPositions:', {
+            effectType,
+            targetPositions,
+            enemyPositions
+          })
 
           if (effectType === 'battery_drain') {
             const allies = currentTurn === 'player' ? playerCards : opponentCards

@@ -147,8 +147,8 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
         />
       </points>
 
-      {/* Glow effect */}
-      <mesh position={[0, 0, 0]}>
+      {/* Glow effect - disabled to prevent orange border */}
+      {/* <mesh position={[0, 0, 0]}>
         <planeGeometry args={[3, 3]} />
         <meshBasicMaterial
           color={stacks === 3 ? '#ff0000' : stacks === 2 ? '#ff4500' : '#ff8800'}
@@ -158,7 +158,7 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
           side={THREE.DoubleSide}
           depthWrite={false}
         />
-      </mesh>
+      </mesh> */}
     </group>
   )
 }

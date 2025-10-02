@@ -278,6 +278,31 @@ export function GameScene() {
 
         {activeEffects.map(effect => {
           if (effect.type === 'fire_breath') {
+            console.log('[FIRE BREATH VFX] Effect data:', {
+              hasEnemyPositions: !!effect.enemyPositions,
+              enemyPositionsLength: effect.enemyPositions?.length,
+              enemyPositions: effect.enemyPositions,
+              targetPosition: effect.targetPosition
+            })
+
+            // Handle multi-target fire breath (Fire Aura)
+            if (effect.enemyPositions && effect.enemyPositions.length > 0) {
+              console.log('[FIRE BREATH VFX] Rendering multi-target with', effect.enemyPositions.length, 'targets')
+              return (
+                <group key={effect.id}>
+                  {effect.enemyPositions.map((targetPos, idx) => (
+                    <VFXFireBreath
+                      key={`${effect.id}-${idx}`}
+                      sourcePosition={effect.sourcePosition || effect.position}
+                      targetPosition={targetPos}
+                      onComplete={idx === 0 ? () => removeEffect(effect.id) : undefined}
+                    />
+                  ))}
+                </group>
+              )
+            }
+            // Single target fire breath (Mecha Dino)
+            console.log('[FIRE BREATH VFX] Rendering single-target')
             return (
               <VFXFireBreath
                 key={effect.id}

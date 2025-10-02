@@ -125,6 +125,62 @@ cd server && node gameServer.js
 
 ---
 
+## 🔥 How to Make a Single-Target VFX Hit Multiple Enemies
+
+Sometimes you want to reuse an existing single-target VFX (like Fire Breath) but have it hit all enemies. Here's how:
+
+### Example: Fire Aura (reuses Fire Breath VFX for all enemies)
+
+**1. GameUI.tsx (Line ~329)** - Add your effect type to the multi-target position calculator:
+```typescript
+if (effectType === 'battery_drain' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
+  enemyPositions = targetPositions  // This passes all enemy positions
+  // ...
+}
+```
+
+**2. GameScene.tsx (Line ~280)** - Add logic to render multiple VFX instances:
+```typescript
+if (effect.type === 'fire_breath') {
+  // Multi-target mode - render one VFX per enemy
+  if (effect.enemyPositions && effect.enemyPositions.length > 0) {
+    return (
+      <group key={effect.id}>
+        {effect.enemyPositions.map((targetPos, idx) => (
+          <VFXFireBreath
+            key={`${effect.id}-${idx}`}
+            sourcePosition={effect.sourcePosition || effect.position}
+            targetPosition={targetPos}
+            onComplete={idx === 0 ? () => removeEffect(effect.id) : undefined}
+          />
+        ))}
+      </group>
+    )
+  }
+  // Single-target mode (fallback)
+  return <VFXFireBreath ... />
+}
+```
+
+**3. server/gameServer.js (Line ~734)** - Add your effect type to the server's multi-target handler:
+```javascript
+// For Battery Drain, Chaos Shuffle, and Fire Aura (fire_breath), add enemy positions
+if (effectType === 'battery_drain' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
+  visualEffect.enemyPositions = opponentCards.filter(c => c.hp > 0).map((card, i) => {
+    return [(-3 + i * 2), 0.5, playerRole === 'player1' ? -2 : 2]
+  })
+}
+```
+
+**Key Points:**
+- This lets you reuse a single-target VFX component without modifying it
+- The VFX component stays simple (only needs `sourcePosition` and `targetPosition`)
+- GameScene.tsx handles rendering multiple instances
+- Works in both single-player and multiplayer
+- **Don't forget to restart the server** after editing `gameServer.js`
+
+---
+
 ## 📝 Quick Reference: Files to Edit
 
 1. **`src/components/3d/VFXYourAbilityName.tsx`** - Create VFX component

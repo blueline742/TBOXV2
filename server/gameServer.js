@@ -645,23 +645,40 @@ function executeAbility(room, playerRole, targetId) {
       if (ability.effect && ability.effect !== 'battery_drain') {
         // Add debuff - shield amount depends on ability name
         const shieldAmount = ability.name === 'Shield Boost' ? 15 : 10
-        const debuffMap = {
-          'freeze': { type: 'frozen', duration: 2 },
-          'burn': { type: 'burned', duration: 3, damage: 5 },
-          'stun': { type: 'stunned', duration: 1 },
-          'poison': { type: 'poisoned', duration: 4, damage: 3 },
-          'shield': { type: 'shielded', duration: 999, shieldAmount: shieldAmount },
-          'weaken': { type: 'weakened', duration: 6, damageReduction: 0.3 },
-          'water_squirt': { type: 'wet', duration: 999, stacks: 1, maxStacks: 3, critChanceIncrease: 0.2 },
-          'bath_bomb': { type: 'protected', duration: 999, damageReduction: 0.15 }
+
+        // Special handling for Fire Aura - use fire_aura debuff type
+        let debuff
+        if (ability.name === 'Fire Aura') {
+          debuff = { type: 'fire_aura', duration: 999, damage: 5, stacks: 1, maxStacks: 3 }
+        } else {
+          const debuffMap = {
+            'freeze': { type: 'frozen', duration: 2 },
+            'burn': { type: 'burned', duration: 3, damage: 5 },
+            'stun': { type: 'stunned', duration: 1 },
+            'poison': { type: 'poisoned', duration: 4, damage: 3 },
+            'shield': { type: 'shielded', duration: 999, shieldAmount: shieldAmount },
+            'weaken': { type: 'weakened', duration: 6, damageReduction: 0.3 },
+            'water_squirt': { type: 'wet', duration: 999, stacks: 1, maxStacks: 3, critChanceIncrease: 0.2 },
+            'bath_bomb': { type: 'protected', duration: 999, damageReduction: 0.15 }
+          }
+          debuff = debuffMap[ability.effect]
         }
-        const debuff = debuffMap[ability.effect]
+
         if (debuff && target.hp > 0) {
           // Check if wet already exists and stack it
           if (debuff.type === 'wet') {
             const existingWet = target.debuffs.find(d => d.type === 'wet')
             if (existingWet) {
               existingWet.stacks = Math.min((existingWet.stacks || 1) + 1, 3)
+            } else {
+              target.debuffs.push(debuff)
+            }
+          }
+          // Check if fire_aura already exists and stack it
+          else if (debuff.type === 'fire_aura') {
+            const existingFireAura = target.debuffs.find(d => d.type === 'fire_aura')
+            if (existingFireAura) {
+              existingFireAura.stacks = Math.min((existingFireAura.stacks || 1) + 1, 3)
             } else {
               target.debuffs.push(debuff)
             }
@@ -714,6 +731,7 @@ function executeAbility(room, playerRole, targetId) {
     else if (ability.name === 'Laser Beam') effectType = 'laser_beam'
     else if (ability.name === 'Shield Boost') effectType = 'shield_boost'
     else if (ability.name === 'Recharge Batteries') effectType = 'resurrection'
+    else if (ability.name === 'Fire Aura') effectType = 'fire_breath'
 
     const targetPositionsList = targets.map(t => {
       const isOpponent = opponentCards.some(c => c.id === t.id)
@@ -729,8 +747,8 @@ function executeAbility(room, playerRole, targetId) {
       targetPositions: targetPositionsList // All target positions for multi-target
     }
 
-    // For Battery Drain and Chaos Shuffle, add enemy and ally positions
-    if (effectType === 'battery_drain' || effectType === 'chaos_shuffle') {
+    // For Battery Drain, Chaos Shuffle, and Fire Aura (fire_breath), add enemy and ally positions
+    if (effectType === 'battery_drain' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
       visualEffect.enemyPositions = opponentCards.filter(c => c.hp > 0).map((card, i) => {
         return [(-3 + i * 2), 0.5, playerRole === 'player1' ? -2 : 2]
       })

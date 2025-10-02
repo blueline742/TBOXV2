@@ -166,7 +166,7 @@ export function VFXFireBreath({ sourcePosition, targetPosition, onComplete }: VF
 
   // Setup main fire stream particles
   const { geometry: fireGeometry, material: fireMaterial } = useMemo(() => {
-    const particleCount = 150  // Optimized for performance
+    const particleCount = 50  // Reduced for multi-target performance
     const positions = new Float32Array(particleCount * 3)
     const particleTimes = new Float32Array(particleCount)
     const particleSpeeds = new Float32Array(particleCount)
@@ -222,7 +222,7 @@ export function VFXFireBreath({ sourcePosition, targetPosition, onComplete }: VF
 
   // Setup lingering ember particles
   const { geometry: emberGeometry, material: emberMaterial } = useMemo(() => {
-    const particleCount = 30  // Reduced for performance
+    const particleCount = 10  // Minimal embers for multi-target
     const positions = new Float32Array(particleCount * 3)
     const sizes = new Float32Array(particleCount)
     const lifetimes = new Float32Array(particleCount)
@@ -261,7 +261,7 @@ export function VFXFireBreath({ sourcePosition, targetPosition, onComplete }: VF
 
   // Setup explosion particles at impact
   const { geometry: explosionGeometry, material: explosionMaterial } = useMemo(() => {
-    const particleCount = 40  // Reduced for performance
+    const particleCount = 15  // Minimal explosion for multi-target
     const positions = new Float32Array(particleCount * 3)
     const velocities = new Float32Array(particleCount * 3)
     const sizes = new Float32Array(particleCount)
@@ -378,13 +378,13 @@ export function VFXFireBreath({ sourcePosition, targetPosition, onComplete }: VF
       {/* Main fire stream */}
       <points ref={meshRef} geometry={fireGeometry} material={fireMaterial} />
 
-      {/* Impact explosion */}
-      <points ref={explosionMeshRef} geometry={explosionGeometry} material={explosionMaterial} />
+      {/* Impact explosion - disabled for better performance */}
+      {/* <points ref={explosionMeshRef} geometry={explosionGeometry} material={explosionMaterial} /> */}
 
-      {/* Lingering embers */}
-      <points ref={emberMeshRef} geometry={emberGeometry} material={emberMaterial} />
+      {/* Lingering embers - disabled for better performance */}
+      {/* <points ref={emberMeshRef} geometry={emberGeometry} material={emberMaterial} /> */}
 
-      {/* Point lights for illumination */}
+      {/* Point lights for illumination - reduced intensity */}
       <pointLight
         position={[
           sourcePosition[0] + (targetPosition[0] - sourcePosition[0]) * Math.min(1, progressRef.current),
@@ -392,8 +392,8 @@ export function VFXFireBreath({ sourcePosition, targetPosition, onComplete }: VF
           sourcePosition[2] + (targetPosition[2] - sourcePosition[2]) * Math.min(1, progressRef.current)
         ]}
         color="#ff4400"
-        intensity={0.8}
-        distance={3}
+        intensity={0.4}
+        distance={2}
         decay={2}
       />
     </group>
