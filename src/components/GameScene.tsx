@@ -519,7 +519,6 @@ export function GameScene() {
         })}
       </Suspense>
     </Canvas>
-    <CardOverlay cards={cardPositions} />
     <CardStatusUI />
     </>
   )

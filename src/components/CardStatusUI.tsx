@@ -73,7 +73,7 @@ function CardStatus({ card }: { card: CardData }) {
       case 'poisoned': return { icon: '☠️', stacks: d.stacks || 1 }
       case 'stunned': return { icon: '💫', stacks: 1 }
       case 'shielded': return { icon: '🛡️', stacks: d.shieldAmount || shield }
-      case 'protected': return { icon: '🛡️', stacks: d.shieldAmount || shield }
+      case 'protected': return { icon: '✨', stacks: 1 }
       case 'weakened': return { icon: '⚠️', stacks: 1 }
       case 'wet': return { icon: '💧', stacks: 1 }
       default: return null
