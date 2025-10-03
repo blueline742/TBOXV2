@@ -28,6 +28,7 @@ import { VFXLaserBeam } from './3d/VFXLaserBeam'
 import { VFXShieldBoost } from './3d/VFXShieldBoost'
 import { VFXResurrection } from './3d/VFXResurrection'
 import VFXSystem from './vfx/VFXSystem'
+import { VFXPrewarmer } from './vfx/VFXPrewarmer'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
 import { SpellEffectData } from './GameUI'
 import { preloadCardTextures, preloadSceneAssets } from '@/utils/texturePreloader'
@@ -278,6 +279,7 @@ export function GameScene() {
         ))}
 
         <VFXSystem />
+        <VFXPrewarmer />
 
         {activeEffects.map(effect => {
           if (effect.type === 'fire_breath') {
