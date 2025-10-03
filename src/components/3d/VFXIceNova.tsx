@@ -87,39 +87,51 @@ export function VFXIceNova({ position, onComplete }: VFXIceNovaProps) {
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Central ice explosion - commented out due to API mismatch */}
-      {/* <VFXEmitter
-        position={[0, 0.5, 0]}
-        startSize={0.3}
-        endSize={0.05}
-        particleCount={200}
-        lifetime={2}
-        velocity={[0, 5, 0]}
-        velocityRandomness={3}
-        color={new THREE.Color(0x00ddff)}
-        endColor={new THREE.Color(0xffffff)}
-        gravity={[0, -2, 0]}
-        fadeIn={0.1}
-        fadeOut={0.5}
-      /> */}
+      {/* Central ice explosion */}
+      <group position={[0, 0.5, 0]}>
+        <VFXEmitter
+          emitter="iceBurst"
+          autoStart={true}
+          settings={{
+            loop: false,
+            duration: 2,
+            nbParticles: 200,
+            spawnMode: "burst",
+            particlesLifetime: [1.5, 2],
+            startPositionMin: [0, 0, 0],
+            startPositionMax: [0, 0, 0],
+            directionMin: [-3, 3, -3],
+            directionMax: [3, 7, 3],
+            size: [0.05, 0.3],
+            speed: [3, 6],
+            colorStart: ["#00ddff", "#88ffff"],
+            colorEnd: ["#ffffff", "#aaffff"],
+          }}
+        />
+      </group>
 
-      {/* Radial ice shards burst - commented out due to API mismatch */}
-      {/* <VFXParticles
-        particleCount={300}
-        startPosition={[0, 0.2, 0]}
-        endPosition={[0, 0.2, 0]}
-        startSize={0.5}
-        endSize={0.1}
-        lifetime={2.5}
-        velocity={[0, 0, 0]}
-        velocityRandomness={8}
-        startColor={new THREE.Color(0x88ddff)}
-        endColor={new THREE.Color(0xffffff)}
-        opacity={1}
-        fadeOut={0.7}
-        textureUrl="/snowflake.png"
-        blending={THREE.AdditiveBlending}
-      /> */}
+      {/* Radial ice shards burst */}
+      <group position={[0, 0.2, 0]}>
+        <VFXEmitter
+          emitter="iceShards"
+          autoStart={true}
+          settings={{
+            loop: false,
+            duration: 2.5,
+            nbParticles: 300,
+            spawnMode: "burst",
+            particlesLifetime: [2, 2.5],
+            startPositionMin: [0, 0, 0],
+            startPositionMax: [0, 0, 0],
+            directionMin: [-8, -1, -8],
+            directionMax: [8, 1, 8],
+            size: [0.1, 0.5],
+            speed: [4, 8],
+            colorStart: ["#88ddff", "#aaffff"],
+            colorEnd: ["#ffffff", "#ccffff"],
+          }}
+        />
+      </group>
 
       {/* Expanding shockwave ring */}
       <mesh ref={shockwaveRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>

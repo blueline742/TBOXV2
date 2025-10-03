@@ -58,38 +58,47 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
         />
       </mesh>
 
-      {/* Purple/mystical smoke clouds - commented out due to API mismatch */}
-      {/* <VFXEmitter
-        position={[0, 0, 0]}
-        startSize={1}
-        endSize={3}
-        particleCount={300}
-        lifetime={2.5}
-        velocity={[0, 2, 0]}
-        velocityRandomness={2}
-        color={new THREE.Color(0x8844ff)}
-        endColor={new THREE.Color(0xff44ff)}
-        gravity={[0, 0.5, 0]}
-        fadeIn={0.1}
-        fadeOut={0.8}
-      /> */}
+      {/* Purple/mystical smoke clouds */}
+      <VFXEmitter
+        emitter="chaosSmoke"
+        autoStart={true}
+        settings={{
+          loop: false,
+          duration: 2.5,
+          nbParticles: 300,
+          spawnMode: "time",
+          particlesLifetime: [2, 2.5],
+          startPositionMin: [0, 0, 0],
+          startPositionMax: [0, 0, 0],
+          directionMin: [-2, 1, -2],
+          directionMax: [2, 3, 2],
+          size: [1, 3],
+          speed: [1, 2],
+          colorStart: ["#8844ff", "#aa44ff"],
+          colorEnd: ["#ff44ff", "#ff88ff"],
+        }}
+      />
 
-      {/* Swirling magic particles - commented out due to API mismatch */}
-      {/* <VFXParticles
-        particleCount={500}
-        startPosition={[0, 0, 0]}
-        endPosition={[0, 2, 0]}
-        startSize={0.3}
-        endSize={0.05}
-        lifetime={2}
-        velocity={[0, 0, 0]}
-        velocityRandomness={5}
-        startColor={new THREE.Color(0xff00ff)}
-        endColor={new THREE.Color(0x8800ff)}
-        opacity={0.8}
-        fadeOut={0.7}
-        blending={THREE.AdditiveBlending}
-      /> */}
+      {/* Swirling magic sparkles */}
+      <VFXEmitter
+        emitter="chaosSparkles"
+        autoStart={true}
+        settings={{
+          loop: false,
+          duration: 2,
+          nbParticles: 500,
+          spawnMode: "time",
+          particlesLifetime: [1.5, 2],
+          startPositionMin: [-0.5, 0, -0.5],
+          startPositionMax: [0.5, 0, 0.5],
+          directionMin: [-5, 0, -5],
+          directionMax: [5, 2, 5],
+          size: [0.05, 0.3],
+          speed: [2, 5],
+          colorStart: ["#ff00ff", "#ffffff"],
+          colorEnd: ["#8800ff", "#ff44ff"],
+        }}
+      />
 
       {/* Individual smoke effects at each enemy position */}
       {enemyPositions.length > 0 && enemyPositions.map((pos, index) => {
@@ -98,40 +107,49 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
 
         return (
           <group key={index} position={relativePos}>
-            {/* Purple smoke puff - commented out due to API mismatch */}
-            {/* <VFXEmitter
-              position={[0, 0, 0]}
-              startSize={0.8}
-              endSize={2}
-              particleCount={100}
-              lifetime={2}
-              velocity={[0, 1, 0]}
-              velocityRandomness={1.5}
-              color={new THREE.Color(0xaa44ff)}
-              endColor={new THREE.Color(0xff88ff)}
-              gravity={[0, 0.2, 0]}
-              fadeIn={0.1}
-              fadeOut={0.6}
-              delay={index * 0.1}
-            /> */}
+            {/* Purple smoke puff at card */}
+            <VFXEmitter
+              emitter="chaosSmoke"
+              autoStart={true}
+              settings={{
+                loop: false,
+                duration: 2,
+                nbParticles: 100,
+                spawnMode: "burst",
+                particlesLifetime: [1.5, 2],
+                startPositionMin: [0, 0, 0],
+                startPositionMax: [0, 0, 0],
+                directionMin: [-1.5, 0.5, -1.5],
+                directionMax: [1.5, 1.5, 1.5],
+                size: [0.8, 2],
+                speed: [0.5, 1.5],
+                colorStart: ["#aa44ff", "#8844ff"],
+                colorEnd: ["#ff88ff", "#ff44ff"],
+                delay: index * 0.1,
+              }}
+            />
 
-            {/* Sparkles - commented out due to API mismatch */}
-            {/* <VFXParticles
-              particleCount={50}
-              startPosition={[0, 0, 0]}
-              endPosition={[0, 1.5, 0]}
-              startSize={0.2}
-              endSize={0.05}
-              lifetime={1.5}
-              velocity={[0, 0, 0]}
-              velocityRandomness={2}
-              startColor={new THREE.Color(0xffffff)}
-              endColor={new THREE.Color(0xff44ff)}
-              opacity={1}
-              fadeOut={0.5}
-              blending={THREE.AdditiveBlending}
-              delay={index * 0.1}
-            /> */}
+            {/* Sparkles around card */}
+            <VFXEmitter
+              emitter="chaosSparkles"
+              autoStart={true}
+              settings={{
+                loop: false,
+                duration: 1.5,
+                nbParticles: 50,
+                spawnMode: "time",
+                particlesLifetime: [1, 1.5],
+                startPositionMin: [-0.2, 0, -0.2],
+                startPositionMax: [0.2, 0, 0.2],
+                directionMin: [-2, 0, -2],
+                directionMax: [2, 1.5, 2],
+                size: [0.05, 0.2],
+                speed: [1, 3],
+                colorStart: ["#ffffff", "#ff00ff"],
+                colorEnd: ["#ff44ff", "#8800ff"],
+                delay: index * 0.1,
+              }}
+            />
 
             {/* Glow sphere */}
             <pointLight

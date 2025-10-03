@@ -17,7 +17,8 @@
       "Bash(git log:*)",
       "Bash(git restore:*)",
       "Bash(curl -o \"c:\\Users\\samta\\OneDrive\\Desktop\\Websites\\TBOXV2\\public\\toybox-logo.png\" \"https://cdn.discordapp.com/attachments/1256784683972223071/1313982695935463454/Untitled_design_1.png?ex=67520c35&is=6750bab5&hm=8f98c8d8b90b4e0d05cbfae4f1c48e0c8ddd1c8d8c8d8c8d8c8d8c8d8c8d8c8d&\")",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

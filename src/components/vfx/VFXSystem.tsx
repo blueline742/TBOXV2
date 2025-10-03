@@ -272,6 +272,86 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
           blendingMode: THREE.AdditiveBlending,
         }}
       />
+
+      {/* Chaos Shuffle particles */}
+      <VFXParticles
+        name="chaosSmoke"
+        settings={{
+          nbParticles: 10000,
+          gravity: [0, 0.5, 0],
+          fadeSize: [0.1, 0.6],
+          fadeAlpha: [0.1, 0.9],
+          renderMode: RenderMode.Billboard,
+          intensity: 3,
+          appearance: AppearanceMode.Circular,
+          easeFunction: "easeOutQuad",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
+
+      <VFXParticles
+        name="chaosSparkles"
+        settings={{
+          nbParticles: 5000,
+          gravity: [0, -2, 0],
+          fadeSize: [0.1, 0.4],
+          fadeAlpha: [0, 0.8],
+          renderMode: RenderMode.Billboard,
+          intensity: 5,
+          appearance: AppearanceMode.Square,
+          easeFunction: "easeInOutQuad",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
+
+      {/* Battery Drain particles */}
+      <VFXParticles
+        name="energyDrain"
+        settings={{
+          nbParticles: 5000,
+          gravity: [0, 0, 0],
+          fadeSize: [0.1, 0.5],
+          fadeAlpha: [0, 0.8],
+          renderMode: RenderMode.StretchBillboard,
+          stretchScale: 2,
+          intensity: 4,
+          appearance: AppearanceMode.Circular,
+          easeFunction: "easeInQuad",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
+
+      {/* Ice Nova particles */}
+      <VFXParticles
+        name="iceBurst"
+        settings={{
+          nbParticles: 8000,
+          gravity: [0, -2, 0],
+          fadeSize: [0.2, 0.7],
+          fadeAlpha: [0, 0.9],
+          renderMode: RenderMode.Billboard,
+          intensity: 6,
+          appearance: AppearanceMode.Circular,
+          easeFunction: "easeOutCubic",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
+
+      <VFXParticles
+        name="iceShards"
+        settings={{
+          nbParticles: 6000,
+          gravity: [0, -4, 0],
+          fadeSize: [0.1, 0.4],
+          fadeAlpha: [0, 0.8],
+          renderMode: RenderMode.StretchBillboard,
+          stretchScale: 2,
+          intensity: 4,
+          appearance: AppearanceMode.Square,
+          easeFunction: "easeOutQuad",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
     </>
   );
 });
