@@ -82,8 +82,8 @@ const DuckProjectile: React.FC<DuckProjectileProps> = ({
       {isFlying && (
         <group ref={duckRef} position={sourcePosition}>
           <primitive object={scene.clone()} scale={0.015} />
-          {/* Duck glow */}
-          <pointLight color="#FFD700" intensity={3} distance={2} />
+          {/* Duck glow - removed for performance */}
+          {/* <pointLight color="#FFD700" intensity={3} distance={2} /> */}
         </group>
       )}
 
@@ -94,10 +94,10 @@ const DuckProjectile: React.FC<DuckProjectileProps> = ({
           autoStart={true}
           settings={{
             loop: true,
-            duration: 0.1,
-            nbParticles: 3,
+            duration: 0.2,
+            nbParticles: 1,
             spawnMode: "time",
-            particlesLifetime: [0.5, 0.8],
+            particlesLifetime: [0.3, 0.5],
             startPositionMin: duckRef.current?.position.toArray() || sourcePosition,
             startPositionMax: duckRef.current?.position.toArray() || sourcePosition,
             directionMin: [-0.5, -0.5, -0.5],
@@ -118,9 +118,9 @@ const DuckProjectile: React.FC<DuckProjectileProps> = ({
           settings={{
             loop: false,
             duration: 0.15,
-            nbParticles: 12,
+            nbParticles: 5,
             spawnMode: "burst",
-            particlesLifetime: [0.6, 1.0],
+            particlesLifetime: [0.4, 0.6],
             startPositionMin: targetPosition,
             startPositionMax: targetPosition,
             directionMin: [-2, -0.5, -2],
@@ -146,16 +146,16 @@ export const VFXDuckSwarm: React.FC<VFXDuckSwarmProps> = ({
   const handleDuckComplete = () => {
     setCompletedDucks(prev => {
       const newCount = prev + 1;
-      if (newCount >= 6) {
+      if (newCount >= 3) {
         onComplete();
       }
       return newCount;
     });
   };
 
-  // Create 6 ducks targeting all enemies (distributed)
+  // Create 3 ducks targeting all enemies (distributed) - reduced for performance
   const duckTargets = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 3; i++) {
     const targetIndex = i % targetPositions.length;
     duckTargets.push({
       target: targetPositions[targetIndex],
@@ -184,9 +184,9 @@ export const VFXDuckSwarm: React.FC<VFXDuckSwarmProps> = ({
         settings={{
           loop: false,
           duration: 0.3,
-          nbParticles: 8,
+          nbParticles: 3,
           spawnMode: "burst",
-          particlesLifetime: [0.4, 0.7],
+          particlesLifetime: [0.3, 0.5],
           startPositionMin: sourcePosition,
           startPositionMax: sourcePosition,
           directionMin: [-1, 0, -1],

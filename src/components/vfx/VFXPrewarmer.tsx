@@ -15,12 +15,17 @@ export function VFXPrewarmer() {
 
   useEffect(() => {
     if (!hasWarmedUp.current) {
-      hasWarmedUp.current = true
       console.log('[VFX] Warming up particle systems...')
+      // Set warmup complete after emitters have had time to render and compile shaders
+      const timer = setTimeout(() => {
+        hasWarmedUp.current = true
+        console.log('[VFX] Warmup complete - shaders should be compiled')
+      }, 2000) // Increased from 500ms to 2000ms to ensure all shaders compile
+      return () => clearTimeout(timer)
     }
   }, [])
 
-  // Don't render during warmup - these are just for shader compilation
+  // Stop rendering after warmup is complete
   if (hasWarmedUp.current) {
     return null
   }
@@ -35,17 +40,17 @@ export function VFXPrewarmer() {
           autoStart={true}
           settings={{
             loop: false,
-            duration: 0.1,
-            nbParticles: 1, // Just 1 particle to compile the shader
+            duration: 0.5,
+            nbParticles: 10, // More particles to trigger all shader paths
             spawnMode: 'burst',
-            particlesLifetime: [0.1, 0.1],
+            particlesLifetime: [0.1, 0.2],
             startPositionMin: [0, 0, 0],
-            startPositionMax: [0, 0, 0],
+            startPositionMax: [0.1, 0.1, 0.1],
             directionMin: [0, 0, 0],
-            directionMax: [0, 0, 0],
-            size: [0.01, 0.01],
-            speed: [0, 0],
-            colorStart: ['#000000'],
+            directionMax: [0.1, 0.1, 0.1],
+            size: [0.05, 0.1],
+            speed: [0.1, 0.5],
+            colorStart: ['#ffffff'],
             colorEnd: ['#000000'],
           }}
         />

@@ -166,7 +166,7 @@ export function VFXFireBreath({ sourcePosition, targetPosition, onComplete }: VF
 
   // Setup main fire stream particles
   const { geometry: fireGeometry, material: fireMaterial } = useMemo(() => {
-    const particleCount = 50  // Reduced for multi-target performance
+    const particleCount = 25  // Further reduced to eliminate lag
     const positions = new Float32Array(particleCount * 3)
     const particleTimes = new Float32Array(particleCount)
     const particleSpeeds = new Float32Array(particleCount)
@@ -222,7 +222,7 @@ export function VFXFireBreath({ sourcePosition, targetPosition, onComplete }: VF
 
   // Setup lingering ember particles
   const { geometry: emberGeometry, material: emberMaterial } = useMemo(() => {
-    const particleCount = 10  // Minimal embers for multi-target
+    const particleCount = 5  // Further reduced embers
     const positions = new Float32Array(particleCount * 3)
     const sizes = new Float32Array(particleCount)
     const lifetimes = new Float32Array(particleCount)
@@ -261,7 +261,7 @@ export function VFXFireBreath({ sourcePosition, targetPosition, onComplete }: VF
 
   // Setup explosion particles at impact
   const { geometry: explosionGeometry, material: explosionMaterial } = useMemo(() => {
-    const particleCount = 15  // Minimal explosion for multi-target
+    const particleCount = 8  // Further reduced explosion
     const positions = new Float32Array(particleCount * 3)
     const velocities = new Float32Array(particleCount * 3)
     const sizes = new Float32Array(particleCount)

@@ -36,6 +36,7 @@ import { CardOverlay, CardPosition } from './CardOverlay'
 import { DynamicCamera } from './3d/DynamicCamera'
 import { LoadingScreen } from './LoadingScreen'
 import { CardStatusUI } from './CardStatusUI'
+import { CartoonTorch } from './3d/CartoonTorch'
 
 export function GameScene() {
   const store = useOptimizedGameStore()

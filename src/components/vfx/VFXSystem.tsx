@@ -23,7 +23,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="fireballTrail"
         settings={{
-          nbParticles: 10000,
+          nbParticles: 1000,
           gravity: [0, -2, 0],
           fadeSize: [0, 0.8],
           fadeAlpha: [0, 0.9],
@@ -38,7 +38,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="smokeTrail"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 500,
           gravity: [0, 1, 0],
           fadeSize: [0, 0.5],
           fadeAlpha: [0.2, 0.8],
@@ -54,7 +54,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="lightningSparks"
         settings={{
-          nbParticles: 10000,
+          nbParticles: 1000,
           gravity: [0, 0, 0],
           fadeSize: [0, 0.9],
           fadeAlpha: [0, 0.8],
@@ -71,7 +71,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="explosion"
         settings={{
-          nbParticles: 10000,
+          nbParticles: 1000,
           gravity: [0, -5, 0],
           fadeSize: [0, 0.7],
           fadeAlpha: [0, 0.8],
@@ -86,7 +86,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="explosionSmoke"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 500,
           gravity: [0, 2, 0],
           fadeSize: [0, 0.3],
           fadeAlpha: [0.1, 0.9],
@@ -102,7 +102,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="impact"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 500,
           gravity: [0, -10, 0],
           fadeSize: [0, 0.8],
           fadeAlpha: [0, 0.9],
@@ -118,7 +118,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="heal"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 500,
           gravity: [0, 0, 0],
           fadeSize: [0.2, 0.8],
           fadeAlpha: [0, 0.7],
@@ -141,7 +141,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="buff"
         settings={{
-          nbParticles: 2000,
+          nbParticles: 250,
           gravity: [0, 0, 0],
           fadeSize: [0.1, 0.9],
           fadeAlpha: [0, 0.8],
@@ -163,7 +163,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="bathBombBurst"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 750,
           gravity: [0, -2, 0],
           fadeSize: [0.2, 0.8],
           fadeAlpha: [0, 0.9],
@@ -178,7 +178,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="bubbleStream"
         settings={{
-          nbParticles: 3000,
+          nbParticles: 400,
           gravity: [0, 0, 0],
           fadeSize: [0.1, 0.7],
           fadeAlpha: [0, 0.8],
@@ -194,7 +194,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="duckFeathers"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 300,
           gravity: [0, -1, 0],
           fadeSize: [0.1, 0.6],
           fadeAlpha: [0, 0.8],
@@ -210,7 +210,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="rocketTrail"
         settings={{
-          nbParticles: 10000,
+          nbParticles: 1000,
           gravity: [0, 0, 0],
           fadeSize: [0.2, 0.9],
           fadeAlpha: [0, 0.8],
@@ -227,7 +227,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="waterDroplets"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 750,
           gravity: [0, -5, 0],
           fadeSize: [0.1, 0.6],
           fadeAlpha: [0, 0.7],
@@ -243,7 +243,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="swordSlash"
         settings={{
-          nbParticles: 3000,
+          nbParticles: 400,
           gravity: [0, 0, 0],
           fadeSize: [0.2, 0.8],
           fadeAlpha: [0, 0.9],
@@ -260,7 +260,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="whirlwind"
         settings={{
-          nbParticles: 3000,
+          nbParticles: 400,
           gravity: [0, 0, 0],
           fadeSize: [0.2, 0.8],
           fadeAlpha: [0, 0.9],
@@ -277,7 +277,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="chaosSmoke"
         settings={{
-          nbParticles: 10000,
+          nbParticles: 150,
           gravity: [0, 0.5, 0],
           fadeSize: [0.1, 0.6],
           fadeAlpha: [0.1, 0.9],
@@ -292,7 +292,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="chaosSparkles"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 100,
           gravity: [0, -2, 0],
           fadeSize: [0.1, 0.4],
           fadeAlpha: [0, 0.8],
@@ -308,7 +308,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="energyDrain"
         settings={{
-          nbParticles: 5000,
+          nbParticles: 750,
           gravity: [0, 0, 0],
           fadeSize: [0.1, 0.5],
           fadeAlpha: [0, 0.8],
@@ -325,7 +325,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="iceBurst"
         settings={{
-          nbParticles: 8000,
+          nbParticles: 1000,
           gravity: [0, -2, 0],
           fadeSize: [0.2, 0.7],
           fadeAlpha: [0, 0.9],
@@ -340,7 +340,7 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
       <VFXParticles
         name="iceShards"
         settings={{
-          nbParticles: 6000,
+          nbParticles: 750,
           gravity: [0, -4, 0],
           fadeSize: [0.1, 0.4],
           fadeAlpha: [0, 0.8],
