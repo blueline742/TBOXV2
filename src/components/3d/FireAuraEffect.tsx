@@ -131,7 +131,7 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
   return (
     <group position={position}>
       {/* Flame aura cylinder */}
-      <mesh ref={meshRef} position={[0, 0.5, 0]}>
+      <mesh ref={meshRef} position={[0, 0.5, 0]} raycast={false}>
         <cylinderGeometry args={[1, 0.8, 2, 16, 8, true]} />
         {/* @ts-ignore */}
         <fireAuraMaterial
@@ -146,7 +146,7 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
       </mesh>
 
       {/* Ember particles */}
-      <points ref={particlesRef} geometry={particleGeometry}>
+      <points ref={particlesRef} geometry={particleGeometry} raycast={false}>
         <pointsMaterial
           size={0.05}
           color={stacks === 3 ? '#ff0000' : stacks === 2 ? '#ff4500' : '#ff6600'}

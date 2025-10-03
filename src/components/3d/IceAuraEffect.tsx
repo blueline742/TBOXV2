@@ -114,7 +114,7 @@ export function IceAuraEffect({ position = [0, 0, 0] }: IceAuraEffectProps) {
   return (
     <group position={position}>
       {/* Ice aura cylinder */}
-      <mesh ref={meshRef} position={[0, 0.5, 0]}>
+      <mesh ref={meshRef} position={[0, 0.5, 0]} raycast={false}>
         <cylinderGeometry args={[1, 0.8, 2, 16, 8, true]} />
         {/* @ts-ignore */}
         <iceAuraMaterial
@@ -129,7 +129,7 @@ export function IceAuraEffect({ position = [0, 0, 0] }: IceAuraEffectProps) {
       </mesh>
 
       {/* Ice crystal particles */}
-      <points ref={particlesRef} geometry={particleGeometry}>
+      <points ref={particlesRef} geometry={particleGeometry} raycast={false}>
         <pointsMaterial
           size={0.08}
           color={'#a5f3fc'}
