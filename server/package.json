@@ -1,0 +1,17 @@
+{
+  "name": "toy-card-battle-server",
+  "version": "1.0.0",
+  "description": "Game server for Toy Card Battle multiplayer",
+  "main": "gameServer.js",
+  "scripts": {
+    "start": "node gameServer.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=20.18.0"
+  }
+}
