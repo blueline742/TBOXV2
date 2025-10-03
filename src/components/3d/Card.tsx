@@ -194,16 +194,16 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
         </mesh>
       )}
 
-      {/* Fire Aura Effect */}
+      {/* Fire Aura Effect - positioned on floor below card */}
       {hasFireAura && fireAuraStacks > 0 && !isDead && (
-        <FireAuraEffect stacks={fireAuraStacks} />
+        <FireAuraEffect stacks={fireAuraStacks} position={[0, -1.2, 0]} />
       )}
 
-      {/* Ice Aura Effect for Frozen Cards */}
+      {/* Ice Aura Effect for Frozen Cards - positioned on floor below card */}
       {isFrozen && !isDead && (
         <>
           {console.log(`[ICE AURA] Rendering for ${card.name}, frozen:`, isFrozen)}
-          <IceAuraEffect />
+          <IceAuraEffect position={[0, -1.2, 0]} />
         </>
       )}
 
