@@ -4,7 +4,11 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import useMultiplayerStore from '@/stores/multiplayerStore'
 import { useEffect, useState } from 'react'
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002'
+// Use Render backend in production, localhost for development
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ||
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:3002'
+    : 'https://tbox-game-server.onrender.com')
 
 export function MultiplayerLobby() {
   const { publicKey, connected } = useWallet()
