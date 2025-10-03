@@ -158,6 +158,120 @@ const VFXSystem = forwardRef<VFXSystemRef>(() => {
           },
         }}
       />
+
+      {/* Bath Bomb particles */}
+      <VFXParticles
+        name="bathBombBurst"
+        settings={{
+          nbParticles: 5000,
+          gravity: [0, -2, 0],
+          fadeSize: [0.2, 0.8],
+          fadeAlpha: [0, 0.9],
+          renderMode: RenderMode.Billboard,
+          intensity: 3,
+          appearance: AppearanceMode.Circular,
+          easeFunction: "easeOutQuad",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
+
+      <VFXParticles
+        name="bubbleStream"
+        settings={{
+          nbParticles: 3000,
+          gravity: [0, 0, 0],
+          fadeSize: [0.1, 0.7],
+          fadeAlpha: [0, 0.8],
+          renderMode: RenderMode.Billboard,
+          intensity: 2,
+          appearance: AppearanceMode.Circular,
+          easeFunction: "easeInOutQuad",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
+
+      {/* Duck Swarm particles */}
+      <VFXParticles
+        name="duckFeathers"
+        settings={{
+          nbParticles: 5000,
+          gravity: [0, -1, 0],
+          fadeSize: [0.1, 0.6],
+          fadeAlpha: [0, 0.8],
+          renderMode: RenderMode.Billboard,
+          intensity: 2,
+          appearance: AppearanceMode.Square,
+          easeFunction: "easeOutQuad",
+          blendingMode: THREE.NormalBlending,
+        }}
+      />
+
+      {/* Extinction Protocol particles */}
+      <VFXParticles
+        name="rocketTrail"
+        settings={{
+          nbParticles: 10000,
+          gravity: [0, 0, 0],
+          fadeSize: [0.2, 0.9],
+          fadeAlpha: [0, 0.8],
+          renderMode: RenderMode.StretchBillboard,
+          stretchScale: 2,
+          intensity: 6,
+          appearance: AppearanceMode.Circular,
+          easeFunction: "easeOutCubic",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
+
+      {/* Water Squirt particles */}
+      <VFXParticles
+        name="waterDroplets"
+        settings={{
+          nbParticles: 5000,
+          gravity: [0, -5, 0],
+          fadeSize: [0.1, 0.6],
+          fadeAlpha: [0, 0.7],
+          renderMode: RenderMode.Billboard,
+          intensity: 2,
+          appearance: AppearanceMode.Circular,
+          easeFunction: "easeOutQuad",
+          blendingMode: THREE.NormalBlending,
+        }}
+      />
+
+      {/* Sword Strike particles */}
+      <VFXParticles
+        name="swordSlash"
+        settings={{
+          nbParticles: 3000,
+          gravity: [0, 0, 0],
+          fadeSize: [0.2, 0.8],
+          fadeAlpha: [0, 0.9],
+          renderMode: RenderMode.StretchBillboard,
+          stretchScale: 1.5,
+          intensity: 4,
+          appearance: AppearanceMode.Square,
+          easeFunction: "easeOutQuad",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
+
+      {/* Whirlwind Slash particles */}
+      <VFXParticles
+        name="whirlwind"
+        settings={{
+          nbParticles: 3000,
+          gravity: [0, 0, 0],
+          fadeSize: [0.2, 0.8],
+          fadeAlpha: [0, 0.9],
+          renderMode: RenderMode.StretchBillboard,
+          stretchScale: 1.5,
+          intensity: 4,
+          appearance: AppearanceMode.Square,
+          easeFunction: "easeOutQuad",
+          blendingMode: THREE.AdditiveBlending,
+        }}
+      />
     </>
   );
 });

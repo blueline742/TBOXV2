@@ -172,20 +172,26 @@ export function VFXSwordStrike({ sourcePosition, targetPosition, onComplete }: V
         />
       </mesh>
 
-      {/* Sword slash trail particles - commented out due to API mismatch */}
-      {/* <VFXEmitter
-        position={[0, 0, 0]}
-        startSize={0.4}
-        endSize={0.1}
-        particleCount={80}
-        lifetime={0.6}
-        velocity={[0, 0, 0]}
-        velocityRandomness={1.5}
-        color={new THREE.Color(0xccddff)}
-        endColor={new THREE.Color(0xffffff)}
-        fadeOut={0.8}
-        blending={THREE.AdditiveBlending}
-      /> */}
+      {/* Sword slash trail particles */}
+      <VFXEmitter
+        emitter="swordSlash"
+        autoStart={true}
+        settings={{
+          loop: false,
+          duration: 0.6,
+          nbParticles: 80,
+          spawnMode: "burst",
+          particlesLifetime: [0.3, 0.6],
+          startPositionMin: [0, 0, 0],
+          startPositionMax: [0, 0, 0],
+          directionMin: [-1.5, -1.5, -1.5],
+          directionMax: [1.5, 1.5, 1.5],
+          size: [0.1, 0.4],
+          speed: [1, 3],
+          colorStart: ["#ccddff", "#ffffff"],
+          colorEnd: ["#ffffff", "#aaccff"],
+        }}
+      />
 
       {/* Impact effect at target - only show during impact phase */}
       {impactProgress > 0 && impactProgress < 1 && (
@@ -194,20 +200,28 @@ export function VFXSwordStrike({ sourcePosition, targetPosition, onComplete }: V
           targetPosition[1] - sourcePosition[1],
           targetPosition[2] - sourcePosition[2]
         ]}>
-          {/* Impact burst - commented out due to API mismatch */}
-          {/* <VFXEmitter
-            position={[0, 0.5, 0]}
-            startSize={0.5}
-            endSize={0.1}
-            particleCount={30}
-            lifetime={0.3}
-            velocity={[0, 0, 0]}
-            velocityRandomness={3}
-            color={new THREE.Color(0xffaa00)}
-            endColor={new THREE.Color(0xff4400)}
-            fadeOut={0.5}
-            blending={THREE.AdditiveBlending}
-          /> */}
+          {/* Impact burst */}
+          <group position={[0, 0.5, 0]}>
+            <VFXEmitter
+              emitter="swordSlash"
+              autoStart={true}
+              settings={{
+                loop: false,
+                duration: 0.3,
+                nbParticles: 30,
+                spawnMode: "burst",
+                particlesLifetime: [0.2, 0.3],
+                startPositionMin: [0, 0, 0],
+                startPositionMax: [0, 0, 0],
+                directionMin: [-3, -3, -3],
+                directionMax: [3, 3, 3],
+                size: [0.1, 0.5],
+                speed: [2, 5],
+                colorStart: ["#ffaa00", "#ff6600"],
+                colorEnd: ["#ff4400", "#ff0000"],
+              }}
+            />
+          </group>
 
           {/* Impact flash */}
           <mesh>

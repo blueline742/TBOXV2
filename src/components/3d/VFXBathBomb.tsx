@@ -109,7 +109,7 @@ export const VFXBathBomb: React.FC<VFXBathBombProps> = ({
             <React.Fragment key={`ally-${index}`}>
               {/* Stream of bubbles to ally */}
               <VFXEmitter
-                emitter={`bubbleStream-${index}`}
+                emitter="bubbleStream"
                 autoStart={true}
                 settings={{
                   loop: false,
@@ -149,7 +149,7 @@ export const VFXBathBomb: React.FC<VFXBathBombProps> = ({
 
               {/* Floating bubbles around ally */}
               <VFXEmitter
-                emitter={`allyBubbles-${index}`}
+                emitter="bubbleStream"
                 autoStart={true}
                 settings={{
                   loop: false,
