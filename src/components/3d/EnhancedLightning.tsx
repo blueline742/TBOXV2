@@ -146,11 +146,11 @@ export function EnhancedLightning({
           />
 
           {/* Particle emitter at target for electric sparks */}
-          <VFXEmitter
-            ref={el => emitterRefs.current[index] = el}
-            emitter={particleId}
-            position={targetPositions[index]}
-            settings={{
+          <group position={targetPositions[index]}>
+            <VFXEmitter
+              ref={el => { emitterRefs.current[index] = el }}
+              emitter={particleId}
+              settings={{
               loop: false,
               duration: duration,
               nbParticles: 100,
@@ -185,14 +185,15 @@ export function EnhancedLightning({
               colorEnd: ['#4488ff', '#2244aa', '#000033'],
             }}
           />
+          </group>
         </group>
       ))}
 
       {/* Central emitter at source for initial burst */}
-      <VFXEmitter
-        emitter={particleId}
-        position={startPosition}
-        settings={{
+      <group position={startPosition}>
+        <VFXEmitter
+          emitter={particleId}
+          settings={{
           loop: false,
           duration: 0.2, // Quick burst at start
           nbParticles: 200,
@@ -221,6 +222,7 @@ export function EnhancedLightning({
           colorEnd: ['#4488ff', '#002266'],
         }}
       />
+      </group>
 
       {/* Light source at start position */}
       <pointLight

@@ -89,24 +89,20 @@ export const VFXLightning: React.FC<VFXLightningProps> = ({
     <>
       <group ref={groupRef}>
         {/* Main lightning bolt */}
-        <line geometry={geometry}>
-          <lineBasicMaterial
-            color="#6699ff"
-            transparent
-            opacity={0.8}
-            linewidth={3}
-          />
-        </line>
+        <primitive object={new THREE.Line(geometry, new THREE.LineBasicMaterial({
+            color: "#6699ff",
+            transparent: true,
+            opacity: 0.8,
+            linewidth: 3
+          }))} />
 
         {/* Glow effect */}
-        <line geometry={geometry}>
-          <lineBasicMaterial
-            color="#ffffff"
-            transparent
-            opacity={0.5}
-            linewidth={1}
-          />
-        </line>
+        <primitive object={new THREE.Line(geometry, new THREE.LineBasicMaterial({
+            color: "#ffffff",
+            transparent: true,
+            opacity: 0.5,
+            linewidth: 1
+          }))} />
 
         {/* Point lights at key positions */}
         <pointLight

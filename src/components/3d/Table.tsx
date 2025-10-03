@@ -115,12 +115,8 @@ export function Table() {
   // Removed instanced toy blocks - replaced with 3D models
 
   // Removed animated dice - replaced with planes
-  useFrame(({ clock }) => {
+  useFrame(() => {
     // Dice animation removed
-    if (false && diceRef.current) {
-      diceRef.current.rotation.x = Math.sin(clock.elapsedTime * 0.5) * 0.1
-      diceRef.current.rotation.y = clock.elapsedTime * 0.3
-    }
   })
 
   return (

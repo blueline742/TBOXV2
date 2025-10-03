@@ -116,6 +116,7 @@ export function IceAuraEffect({ position = [0, 0, 0] }: IceAuraEffectProps) {
       {/* Ice aura cylinder */}
       <mesh ref={meshRef} position={[0, 0.5, 0]}>
         <cylinderGeometry args={[1, 0.8, 2, 16, 8, true]} />
+        {/* @ts-ignore */}
         <iceAuraMaterial
           ref={materialRef}
           transparent

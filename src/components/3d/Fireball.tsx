@@ -109,7 +109,7 @@ export function Fireball({ startPosition, targetPosition, onComplete, duration =
         {/* Outer fireball - larger and brighter */}
         <mesh>
           <sphereGeometry args={[0.5, 16, 16]} />
-          <meshBasicMaterial
+          <meshStandardMaterial
             color="#ff6600"
             emissive="#ff3300"
             emissiveIntensity={3}

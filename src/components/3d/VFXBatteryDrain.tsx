@@ -241,8 +241,8 @@ export function VFXBatteryDrain({
             duration={1.2}
           />
 
-          {/* Drain particles at enemy */}
-          <VFXEmitter
+          {/* Drain particles at enemy - commented out due to API mismatch */}
+          {/* <VFXEmitter
             position={enemyPos}
             startSize={0.2}
             endSize={0.01}
@@ -257,7 +257,7 @@ export function VFXBatteryDrain({
             color={new THREE.Color(0xff0044)}
             endColor={new THREE.Color(0xff8888)}
             fadeOut={0.5}
-          />
+          /> */}
 
           {/* Red damage ring at enemy */}
           <mesh position={[enemyPos[0], 0.1, enemyPos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -297,8 +297,8 @@ export function VFXBatteryDrain({
             duration={1.2}
           />
 
-          {/* Healing particles at ally */}
-          <VFXEmitter
+          {/* Healing particles at ally - commented out due to API mismatch */}
+          {/* <VFXEmitter
             position={allyPos}
             startSize={0.15}
             endSize={0.01}
@@ -309,7 +309,7 @@ export function VFXBatteryDrain({
             color={new THREE.Color(0x00ff44)}
             endColor={new THREE.Color(0xffffff)}
             fadeOut={0.3}
-          />
+          /> */}
 
           {/* Green heal glow at ally */}
           <mesh position={allyPos}>

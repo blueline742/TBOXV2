@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' | 'laser_beam' | 'shield_boost' | 'resurrection' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'extinction_protocol' | 'duck_swarm' | 'sword_strike' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string

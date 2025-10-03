@@ -33,7 +33,9 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
     // Animate central smoke/portal effect
     if (smokeRef.current) {
       smokeRef.current.rotation.y = elapsed * 2
-      smokeRef.current.material.opacity = 0.5 * (1 - progress)
+      if (!Array.isArray(smokeRef.current.material) && 'opacity' in smokeRef.current.material) {
+        smokeRef.current.material.opacity = 0.5 * (1 - progress)
+      }
     }
 
     if (groupRef.current) {
@@ -56,8 +58,8 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
         />
       </mesh>
 
-      {/* Purple/mystical smoke clouds using wawa-vfx - centered on torus */}
-      <VFXEmitter
+      {/* Purple/mystical smoke clouds - commented out due to API mismatch */}
+      {/* <VFXEmitter
         position={[0, 0, 0]}
         startSize={1}
         endSize={3}
@@ -70,10 +72,10 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
         gravity={[0, 0.5, 0]}
         fadeIn={0.1}
         fadeOut={0.8}
-      />
+      /> */}
 
-      {/* Swirling magic particles - centered on torus */}
-      <VFXParticles
+      {/* Swirling magic particles - commented out due to API mismatch */}
+      {/* <VFXParticles
         particleCount={500}
         startPosition={[0, 0, 0]}
         endPosition={[0, 2, 0]}
@@ -87,7 +89,7 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
         opacity={0.8}
         fadeOut={0.7}
         blending={THREE.AdditiveBlending}
-      />
+      /> */}
 
       {/* Individual smoke effects at each enemy position */}
       {enemyPositions.length > 0 && enemyPositions.map((pos, index) => {
@@ -96,8 +98,8 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
 
         return (
           <group key={index} position={relativePos}>
-            {/* Purple smoke puff at each card */}
-            <VFXEmitter
+            {/* Purple smoke puff - commented out due to API mismatch */}
+            {/* <VFXEmitter
               position={[0, 0, 0]}
               startSize={0.8}
               endSize={2}
@@ -111,10 +113,10 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
               fadeIn={0.1}
               fadeOut={0.6}
               delay={index * 0.1}
-            />
+            /> */}
 
-            {/* Sparkles */}
-            <VFXParticles
+            {/* Sparkles - commented out due to API mismatch */}
+            {/* <VFXParticles
               particleCount={50}
               startPosition={[0, 0, 0]}
               endPosition={[0, 1.5, 0]}
@@ -129,7 +131,7 @@ export function VFXChaosShuffle({ position, enemyPositions = [], onComplete }: V
               fadeOut={0.5}
               blending={THREE.AdditiveBlending}
               delay={index * 0.1}
-            />
+            /> */}
 
             {/* Glow sphere */}
             <pointLight

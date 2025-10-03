@@ -207,7 +207,6 @@ const RocketProjectile: React.FC<RocketProjectileProps> = ({
             speed: [0.5, 2],
             colorStart: ["#ff6600", "#ffaa00"],
             colorEnd: ["#ff0000", "#660000"],
-            opacity: [1, 0],
           }}
         />
       )}
@@ -260,7 +259,6 @@ const RocketProjectile: React.FC<RocketProjectileProps> = ({
               speed: [4, 10],
               colorStart: ["#ffffff", "#ffff00", "#ff8800"],
               colorEnd: ["#ff4400", "#ff0000", "#880000"],
-              opacity: [1, 0],
             }}
           />
 
@@ -282,7 +280,6 @@ const RocketProjectile: React.FC<RocketProjectileProps> = ({
               speed: [1, 3],
               colorStart: ["#666666", "#444444"],
               colorEnd: ["#222222", "#000000"],
-              opacity: [0.8, 0],
             }}
           />
 
@@ -304,7 +301,6 @@ const RocketProjectile: React.FC<RocketProjectileProps> = ({
               speed: [8, 15],
               colorStart: ["#ffffff", "#ffff88"],
               colorEnd: ["#ff6600", "#ff0000"],
-              opacity: [1, 0],
             }}
           />
 

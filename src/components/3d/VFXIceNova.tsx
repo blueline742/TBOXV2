@@ -57,7 +57,9 @@ export function VFXIceNova({ position, onComplete }: VFXIceNovaProps) {
     if (shockwaveRef.current) {
       const scale = 0.1 + progress * 10
       shockwaveRef.current.scale.set(scale, 1, scale)
-      shockwaveRef.current.material.opacity = 1 - progress
+      if (!Array.isArray(shockwaveRef.current.material) && 'opacity' in shockwaveRef.current.material) {
+        shockwaveRef.current.material.opacity = 1 - progress
+      }
       shockwaveRef.current.rotation.y = elapsed * 0.5
     }
 
@@ -65,22 +67,28 @@ export function VFXIceNova({ position, onComplete }: VFXIceNovaProps) {
     if (iceRingRef.current) {
       const ringScale = 0.1 + progress * 8
       iceRingRef.current.scale.set(ringScale, 1, ringScale)
-      iceRingRef.current.material.opacity = 0.8 * (1 - progress * 0.5)
+      if (!Array.isArray(iceRingRef.current.material) && 'opacity' in iceRingRef.current.material) {
+        iceRingRef.current.material.opacity = 0.8 * (1 - progress * 0.5)
+      }
     }
 
     // Animate ground frost texture
     if (groundFrostRef.current) {
       const frostScale = progress * 12
       groundFrostRef.current.scale.set(frostScale, 1, frostScale)
-      groundFrostRef.current.material.opacity = 0.6 * (1 - progress * 0.3)
-      groundFrostRef.current.material.emissiveIntensity = 2 * (1 - progress)
+      if (!Array.isArray(groundFrostRef.current.material) && 'opacity' in groundFrostRef.current.material) {
+        groundFrostRef.current.material.opacity = 0.6 * (1 - progress * 0.3)
+      }
+      if (!Array.isArray(groundFrostRef.current.material) && 'emissiveIntensity' in groundFrostRef.current.material) {
+        groundFrostRef.current.material.emissiveIntensity = 2 * (1 - progress)
+      }
     }
   })
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Central ice explosion using wawa-vfx */}
-      <VFXEmitter
+      {/* Central ice explosion - commented out due to API mismatch */}
+      {/* <VFXEmitter
         position={[0, 0.5, 0]}
         startSize={0.3}
         endSize={0.05}
@@ -93,10 +101,10 @@ export function VFXIceNova({ position, onComplete }: VFXIceNovaProps) {
         gravity={[0, -2, 0]}
         fadeIn={0.1}
         fadeOut={0.5}
-      />
+      /> */}
 
-      {/* Radial ice shards burst */}
-      <VFXParticles
+      {/* Radial ice shards burst - commented out due to API mismatch */}
+      {/* <VFXParticles
         particleCount={300}
         startPosition={[0, 0.2, 0]}
         endPosition={[0, 0.2, 0]}
@@ -111,7 +119,7 @@ export function VFXIceNova({ position, onComplete }: VFXIceNovaProps) {
         fadeOut={0.7}
         textureUrl="/snowflake.png"
         blending={THREE.AdditiveBlending}
-      />
+      /> */}
 
       {/* Expanding shockwave ring */}
       <mesh ref={shockwaveRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
@@ -154,8 +162,8 @@ export function VFXIceNova({ position, onComplete }: VFXIceNovaProps) {
         />
       </mesh>
 
-      {/* Rotating ice crystals */}
-      {Array.from({ length: 8 }).map((_, i) => {
+      {/* Rotating ice crystals - commented out due to API mismatch */}
+      {/* {Array.from({ length: 8 }).map((_, i) => {
         const angle = (Math.PI * 2 * i) / 8
         const radius = 2
         return (
@@ -175,10 +183,10 @@ export function VFXIceNova({ position, onComplete }: VFXIceNovaProps) {
             delay={i * 0.1}
           />
         )
-      })}
+      })} */}
 
-      {/* Ambient ice fog */}
-      <VFXParticles
+      {/* Ambient ice fog - commented out due to API mismatch */}
+      {/* <VFXParticles
         particleCount={100}
         startPosition={[0, 0, 0]}
         endPosition={[0, 2, 0]}
@@ -193,7 +201,7 @@ export function VFXIceNova({ position, onComplete }: VFXIceNovaProps) {
         fadeIn={0.5}
         fadeOut={0.5}
         blending={THREE.NormalBlending}
-      />
+      /> */}
 
       {/* Point light for dramatic effect */}
       <pointLight

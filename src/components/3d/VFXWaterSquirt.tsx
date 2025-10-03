@@ -131,7 +131,6 @@ export const VFXWaterSquirt: React.FC<VFXWaterSquirtProps> = ({
               speed: [distance * 4, distance * 6],
               colorStart: ["#99ddff", "#66ccff", "#80dfff"],
               colorEnd: ["#4da6ff", "#3399ff", "#1a80ff"],
-              opacity: [0.9, 0],
             }}
           />
 
@@ -153,7 +152,6 @@ export const VFXWaterSquirt: React.FC<VFXWaterSquirtProps> = ({
               speed: [distance * 3, distance * 5],
               colorStart: ["#b3e6ff", "#80dfff"],
               colorEnd: ["#66ccff", "#4da6ff"],
-              opacity: [0.5, 0],
             }}
           />
         </>
@@ -181,7 +179,6 @@ export const VFXWaterSquirt: React.FC<VFXWaterSquirtProps> = ({
               speed: [3, 7],
               colorStart: ["#99ddff", "#66ccff", "#80dfff"],
               colorEnd: ["#4da6ff", "#3399ff", "#0066cc"],
-              opacity: [0.95, 0],
             }}
           />
 
@@ -203,7 +200,6 @@ export const VFXWaterSquirt: React.FC<VFXWaterSquirtProps> = ({
               speed: [1, 3],
               colorStart: ["#b3e6ff", "#99ddff"],
               colorEnd: ["#66ccff", "#4da6ff"],
-              opacity: [0.6, 0],
             }}
           />
 
@@ -225,7 +221,6 @@ export const VFXWaterSquirt: React.FC<VFXWaterSquirtProps> = ({
               speed: [0.8, 2],
               colorStart: ["#99ddff", "#66ccff"],
               colorEnd: ["#4da6ff", "#1a80ff"],
-              opacity: [0.85, 0],
             }}
           />
 

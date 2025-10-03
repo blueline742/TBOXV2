@@ -15,8 +15,8 @@ export function InstancedToyDucks({ count = 20 }: InstancedToyDucksProps) {
 
   // Extract geometry and material from the loaded model
   const { geometry, material } = useMemo(() => {
-    let foundGeometry = null
-    let foundMaterial = null
+    let foundGeometry: THREE.BufferGeometry | null = null
+    let foundMaterial: THREE.Material | null = null
 
     scene.traverse((child) => {
       if (child instanceof Mesh && !foundGeometry) {
@@ -70,7 +70,7 @@ export function InstancedToyDucks({ count = 20 }: InstancedToyDucksProps) {
     instancedRef.current.instanceMatrix.needsUpdate = true
   }, [count, positions, geometry])
 
-  if (!geometry) {
+  if (!geometry || !material) {
     // Fallback to simple box while loading
     return null
   }

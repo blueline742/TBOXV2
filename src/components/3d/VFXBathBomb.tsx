@@ -101,7 +101,6 @@ export const VFXBathBomb: React.FC<VFXBathBombProps> = ({
               speed: [2, 5],
               colorStart: ["#ff69b4", "#ff1493", "#9370db", "#87ceeb", "#ffd700", "#00ffff"],
               colorEnd: ["#ff69b4", "#9370db", "#87ceeb"],
-              opacity: [0.9, 0],
             }}
           />
 
@@ -134,7 +133,6 @@ export const VFXBathBomb: React.FC<VFXBathBombProps> = ({
                   speed: [2, 4],
                   colorStart: ["#ff69b4", "#9370db", "#87ceeb", "#ffd700"],
                   colorEnd: ["#ff1493", "#9370db", "#00ffff"],
-                  opacity: [0.8, 0],
                 }}
               />
 
@@ -167,7 +165,6 @@ export const VFXBathBomb: React.FC<VFXBathBombProps> = ({
                   speed: [0.5, 1.5],
                   colorStart: ["#ff69b4", "#9370db", "#87ceeb", "#ffd700", "#00ffff"],
                   colorEnd: ["#ff1493", "#9370db", "#87ceeb"],
-                  opacity: [0.7, 0],
                 }}
               />
             </React.Fragment>
@@ -191,7 +188,6 @@ export const VFXBathBomb: React.FC<VFXBathBombProps> = ({
               speed: [3, 6],
               colorStart: ["#ff0000", "#ff7f00", "#ffff00", "#00ff00", "#0000ff", "#4b0082", "#9400d3"],
               colorEnd: ["#ff69b4", "#9370db", "#87ceeb"],
-              opacity: [1, 0],
             }}
           />
 
@@ -213,7 +209,6 @@ export const VFXBathBomb: React.FC<VFXBathBombProps> = ({
               speed: [0.8, 1.5],
               colorStart: ["#ff69b4", "#9370db", "#87ceeb", "#ffd700", "#00ffff", "#ff1493"],
               colorEnd: ["#ff69b4", "#9370db", "#87ceeb"],
-              opacity: [0.9, 0],
             }}
           />
 
@@ -235,7 +230,6 @@ export const VFXBathBomb: React.FC<VFXBathBombProps> = ({
               speed: [0.7, 1.3],
               colorStart: ["#ffd700", "#ff69b4", "#87ceeb", "#9370db", "#00ffff"],
               colorEnd: ["#ff1493", "#9370db", "#87ceeb"],
-              opacity: [0.85, 0],
             }}
           />
         </>

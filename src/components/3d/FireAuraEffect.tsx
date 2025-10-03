@@ -56,6 +56,15 @@ const FireAuraMaterial = shaderMaterial(
 
 extend({ FireAuraMaterial })
 
+// Declare for TypeScript
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      fireAuraMaterial: any
+    }
+  }
+}
+
 interface FireAuraEffectProps {
   stacks: number
   position?: [number, number, number]
@@ -124,6 +133,7 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
       {/* Flame aura cylinder */}
       <mesh ref={meshRef} position={[0, 0.5, 0]}>
         <cylinderGeometry args={[1, 0.8, 2, 16, 8, true]} />
+        {/* @ts-ignore */}
         <fireAuraMaterial
           ref={materialRef}
           transparent

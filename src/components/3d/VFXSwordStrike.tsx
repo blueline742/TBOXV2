@@ -172,8 +172,8 @@ export function VFXSwordStrike({ sourcePosition, targetPosition, onComplete }: V
         />
       </mesh>
 
-      {/* Sword slash trail particles */}
-      <VFXEmitter
+      {/* Sword slash trail particles - commented out due to API mismatch */}
+      {/* <VFXEmitter
         position={[0, 0, 0]}
         startSize={0.4}
         endSize={0.1}
@@ -185,7 +185,7 @@ export function VFXSwordStrike({ sourcePosition, targetPosition, onComplete }: V
         endColor={new THREE.Color(0xffffff)}
         fadeOut={0.8}
         blending={THREE.AdditiveBlending}
-      />
+      /> */}
 
       {/* Impact effect at target - only show during impact phase */}
       {impactProgress > 0 && impactProgress < 1 && (
@@ -194,8 +194,8 @@ export function VFXSwordStrike({ sourcePosition, targetPosition, onComplete }: V
           targetPosition[1] - sourcePosition[1],
           targetPosition[2] - sourcePosition[2]
         ]}>
-          {/* Impact burst */}
-          <VFXEmitter
+          {/* Impact burst - commented out due to API mismatch */}
+          {/* <VFXEmitter
             position={[0, 0.5, 0]}
             startSize={0.5}
             endSize={0.1}
@@ -207,7 +207,7 @@ export function VFXSwordStrike({ sourcePosition, targetPosition, onComplete }: V
             endColor={new THREE.Color(0xff4400)}
             fadeOut={0.5}
             blending={THREE.AdditiveBlending}
-          />
+          /> */}
 
           {/* Impact flash */}
           <mesh>

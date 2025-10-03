@@ -18,8 +18,8 @@ export function InstancedToyMix({ duckCount = 5, dinoCount = 2 }: InstancedToyMi
 
   // Extract geometry and material from duck
   const duckData = useMemo(() => {
-    let foundGeometry = null
-    let foundMaterial = null
+    let foundGeometry: THREE.BufferGeometry | null = null
+    let foundMaterial: THREE.Material | null = null
 
     duckScene.traverse((child) => {
       if (child instanceof Mesh && !foundGeometry) {
@@ -33,8 +33,8 @@ export function InstancedToyMix({ duckCount = 5, dinoCount = 2 }: InstancedToyMi
 
   // Extract geometry and material from dino
   const dinoData = useMemo(() => {
-    let foundGeometry = null
-    let foundMaterial = null
+    let foundGeometry: THREE.BufferGeometry | null = null
+    let foundMaterial: THREE.Material | null = null
 
     dinoScene.traverse((child) => {
       if (child instanceof Mesh && !foundGeometry) {
@@ -131,7 +131,7 @@ export function InstancedToyMix({ duckCount = 5, dinoCount = 2 }: InstancedToyMi
     dinoInstancedRef.current.instanceMatrix.needsUpdate = true
   }, [positions, dinoData.geometry])
 
-  if (!duckData.geometry || !dinoData.geometry) {
+  if (!duckData.geometry || !dinoData.geometry || !duckData.material || !dinoData.material) {
     return null
   }
 

@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { Fireball } from 'wawa-vfx'
+// import { Fireball } from 'wawa-vfx' // Not exported by wawa-vfx
 
 interface WawaFireballProps {
   startPosition: [number, number, number]
@@ -56,12 +56,22 @@ export function WawaFireball({
 
   return (
     <group ref={groupRef} position={startPosition}>
-      <Fireball
+      {/* Fireball component not available in wawa-vfx */}
+      {/* <Fireball
         scale={[0.5, 0.5, 0.5]}
         speed={2}
         opacity={1}
         color="#ff6600"
-      />
+      /> */}
+      {/* Placeholder - simple sphere */}
+      <mesh>
+        <sphereGeometry args={[0.3, 16, 16]} />
+        <meshStandardMaterial
+          color="#ff6600"
+          emissive="#ff3300"
+          emissiveIntensity={2}
+        />
+      </mesh>
     </group>
   )
 }

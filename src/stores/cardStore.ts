@@ -6,7 +6,7 @@ export interface Ability {
   damage?: number
   heal?: number
   effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison' | 'revive' | 'spell_steal' | 'battery_drain' | 'chaos_shuffle' | 'weaken' | 'water_squirt' | 'bath_bomb'
-  targetType: 'single' | 'all' | 'self' | 'allies'
+  targetType: 'single' | 'all' | 'self' | 'allies' | 'dead_allies'
   cooldown?: number
   currentCooldown?: number
 }

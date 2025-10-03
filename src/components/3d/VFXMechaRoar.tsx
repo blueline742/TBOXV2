@@ -110,7 +110,7 @@ export function VFXMechaRoar({ sourcePosition, targetPositions, onComplete }: VF
   const shockwaveMeshRef = useRef<THREE.Mesh>(null)
   const progressRef = useRef(0)
   const timeRef = useRef(0)
-  const originalCameraPosition = useRef<THREE.Vector3>()
+  const originalCameraPosition = useRef<THREE.Vector3 | null>(null)
   const shakeIntensity = useRef(0)
 
   // Setup sound wave particles

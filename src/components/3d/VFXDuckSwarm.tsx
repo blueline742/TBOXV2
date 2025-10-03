@@ -106,7 +106,6 @@ const DuckProjectile: React.FC<DuckProjectileProps> = ({
             speed: [0.3, 0.8],
             colorStart: ["#FFFFFF", "#FFD700", "#FFA500"],
             colorEnd: ["#FFD700", "#FF8C00"],
-            opacity: [0.8, 0],
           }}
         />
       )}
@@ -130,7 +129,6 @@ const DuckProjectile: React.FC<DuckProjectileProps> = ({
             speed: [2, 4],
             colorStart: ["#FFFFFF", "#FFD700", "#FFA500"],
             colorEnd: ["#FFD700", "#FF8C00"],
-            opacity: [0.9, 0],
           }}
         />
       )}
@@ -197,7 +195,6 @@ export const VFXDuckSwarm: React.FC<VFXDuckSwarmProps> = ({
           speed: [2, 3],
           colorStart: ["#FFD700", "#FFA500"],
           colorEnd: ["#FF8C00"],
-          opacity: [0.6, 0],
         }}
       />
     </>

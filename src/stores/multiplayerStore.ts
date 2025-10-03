@@ -169,8 +169,9 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
 
     socket.on('game:over', (data) => {
       // console.log('Game over:', data.winner)
-      const gameStore = useOptimizedGameStore.getState()
-      gameStore.setWinner(data.winner === get().playerRole ? 'player' : 'opponent')
+      useOptimizedGameStore.setState({
+        winner: data.winner === get().playerRole ? 'player' : 'opponent'
+      })
     })
 
     socket.on('error', (error: string) => {

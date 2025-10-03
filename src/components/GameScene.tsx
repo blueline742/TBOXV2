@@ -298,7 +298,7 @@ export function GameScene() {
                       key={`${effect.id}-${idx}`}
                       sourcePosition={effect.sourcePosition || effect.position}
                       targetPosition={targetPos}
-                      onComplete={idx === 0 ? () => removeEffect(effect.id) : undefined}
+                      onComplete={idx === 0 ? () => removeEffect(effect.id) : () => {}}
                     />
                   ))}
                 </group>
