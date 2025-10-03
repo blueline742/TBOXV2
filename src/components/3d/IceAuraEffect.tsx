@@ -113,9 +113,9 @@ export function IceAuraEffect({ position = [0, 0, 0] }: IceAuraEffectProps) {
 
   return (
     <group position={position}>
-      {/* Ice aura cylinder */}
-      <mesh ref={meshRef} position={[0, 0.5, 0]} raycast={false}>
-        <cylinderGeometry args={[1, 0.8, 2, 16, 8, true]} />
+      {/* Flat ice ring on floor - rotated to lay flat */}
+      <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} raycast={false}>
+        <ringGeometry args={[0.6, 1, 32]} />
         {/* @ts-ignore */}
         <iceAuraMaterial
           ref={materialRef}
@@ -124,17 +124,17 @@ export function IceAuraEffect({ position = [0, 0, 0] }: IceAuraEffectProps) {
           intensity={1}
           color1={'#00ffff'}
           color2={'#4fc3f7'}
-          opacity={0.5}
+          opacity={0.7}
         />
       </mesh>
 
-      {/* Ice crystal particles */}
+      {/* Ice crystal particles floating on floor */}
       <points ref={particlesRef} geometry={particleGeometry} raycast={false}>
         <pointsMaterial
-          size={0.08}
+          size={0.1}
           color={'#a5f3fc'}
           transparent
-          opacity={0.9}
+          opacity={0.95}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />

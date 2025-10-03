@@ -35,6 +35,7 @@ import { preloadCardTextures, preloadSceneAssets } from '@/utils/texturePreloade
 import { CardOverlay, CardPosition } from './CardOverlay'
 import { DynamicCamera } from './3d/DynamicCamera'
 import { LoadingScreen } from './LoadingScreen'
+import { CardStatusUI } from './CardStatusUI'
 
 export function GameScene() {
   const store = useOptimizedGameStore()
@@ -519,6 +520,7 @@ export function GameScene() {
       </Suspense>
     </Canvas>
     <CardOverlay cards={cardPositions} />
+    <CardStatusUI />
     </>
   )
 }

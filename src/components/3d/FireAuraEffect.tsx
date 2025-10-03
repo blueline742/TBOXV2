@@ -130,9 +130,9 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
 
   return (
     <group position={position}>
-      {/* Flame aura cylinder */}
-      <mesh ref={meshRef} position={[0, 0.5, 0]} raycast={false}>
-        <cylinderGeometry args={[1, 0.8, 2, 16, 8, true]} />
+      {/* Flat fire ring on floor - rotated to lay flat */}
+      <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} raycast={false}>
+        <ringGeometry args={[0.6, 1, 32]} />
         {/* @ts-ignore */}
         <fireAuraMaterial
           ref={materialRef}
@@ -141,34 +141,21 @@ export function FireAuraEffect({ stacks, position = [0, 0, 0] }: FireAuraEffectP
           intensity={stacks / 3}
           color1={stacks === 3 ? '#ff0000' : stacks === 2 ? '#ff3300' : '#ff6600'}
           color2={stacks === 3 ? '#ffff00' : stacks === 2 ? '#ffaa00' : '#ff8800'}
-          opacity={0.3 + stacks * 0.1}
+          opacity={0.5 + stacks * 0.1}
         />
       </mesh>
 
-      {/* Ember particles */}
+      {/* Ember particles floating on floor */}
       <points ref={particlesRef} geometry={particleGeometry} raycast={false}>
         <pointsMaterial
-          size={0.05}
+          size={0.08}
           color={stacks === 3 ? '#ff0000' : stacks === 2 ? '#ff4500' : '#ff6600'}
           transparent
-          opacity={0.8}
+          opacity={0.9}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </points>
-
-      {/* Glow effect - disabled to prevent orange border */}
-      {/* <mesh position={[0, 0, 0]}>
-        <planeGeometry args={[3, 3]} />
-        <meshBasicMaterial
-          color={stacks === 3 ? '#ff0000' : stacks === 2 ? '#ff4500' : '#ff8800'}
-          transparent
-          opacity={0.15 * stacks}
-          blending={THREE.AdditiveBlending}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh> */}
     </group>
   )
 }
