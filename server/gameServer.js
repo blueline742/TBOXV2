@@ -93,7 +93,7 @@ const toyCards = [
     maxHp: 90,
     texture: '/voodoonft.webp',
     abilities: [
-      { name: 'Cannon Blast', description: 'Area damage', damage: 25, targetType: 'all' },
+      { name: 'Puppet Master', description: 'Steal 15 HP from a random enemy and give it to a random ally', targetType: 'random', effect: 'puppet_master' },
       { name: 'Cutlass Slash', description: 'Single target', damage: 30, targetType: 'single' },
       { name: 'Rum Heal', description: 'Heal self', heal: 30, targetType: 'self' }
     ]
@@ -528,6 +528,10 @@ function executeAbility(room, playerRole, targetId) {
     case 'dead_allies':
       targets = cards.filter(c => c.hp <= 0)
       break
+    case 'random':
+      // For Puppet Master - will be handled specially in effect logic
+      targets = []
+      break
   }
 
   // Special abilities
@@ -575,6 +579,36 @@ function executeAbility(room, playerRole, targetId) {
         ally.hp += healAmount
         heals.push({ cardId: ally.id, amount: healAmount })
       })
+    }
+  } else if (ability.effect === 'puppet_master') {
+    // Puppet Master: Steal 15 HP from random enemy and give to random ally
+    const enemyTargets = opponentCards.filter(c => c.hp > 0)
+    if (enemyTargets.length === 0) {
+      message = `${caster.name} finds no enemies to control!`
+    } else {
+      // Pick random enemy
+      const randomEnemy = enemyTargets[Math.floor(Math.random() * enemyTargets.length)]
+      const drainAmount = Math.min(15, randomEnemy.hp)
+
+      // Damage the random enemy
+      randomEnemy.hp -= drainAmount
+      damages.push({ cardId: randomEnemy.id, amount: drainAmount })
+      targets.push(randomEnemy)
+
+      // Pick random living ally to heal
+      const allyTargets = cards.filter(c => c.hp > 0 && c.hp < c.maxHp)
+      if (allyTargets.length > 0) {
+        const randomAlly = allyTargets[Math.floor(Math.random() * allyTargets.length)]
+        const healAmount = Math.min(drainAmount, randomAlly.maxHp - randomAlly.hp)
+
+        if (healAmount > 0) {
+          randomAlly.hp += healAmount
+          heals.push({ cardId: randomAlly.id, amount: healAmount })
+          message = `${caster.name} steals ${drainAmount} HP from ${randomEnemy.name} and gives it to ${randomAlly.name}!`
+        }
+      } else {
+        message = `${caster.name} steals ${drainAmount} HP from ${randomEnemy.name}!`
+      }
     }
   } else if (ability.effect === 'revive') {
     // Revive fallen allies with 20% HP (targets already filtered by dead_allies)
@@ -738,6 +772,7 @@ function executeAbility(room, playerRole, targetId) {
     else if (ability.name === 'Shield Boost') effectType = 'shield_boost'
     else if (ability.name === 'Recharge Batteries') effectType = 'resurrection'
     else if (ability.name === 'Fire Aura') effectType = 'fire_breath'
+    else if (ability.name === 'Puppet Master') effectType = 'puppet_master'
 
     const targetPositionsList = targets.map(t => {
       const isOpponent = opponentCards.some(c => c.id === t.id)
@@ -753,13 +788,13 @@ function executeAbility(room, playerRole, targetId) {
       targetPositions: targetPositionsList // All target positions for multi-target
     }
 
-    // For Battery Drain, Chaos Shuffle, and Fire Aura (fire_breath), add enemy and ally positions
-    if (effectType === 'battery_drain' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
+    // For Battery Drain, Puppet Master, Chaos Shuffle, and Fire Aura (fire_breath), add enemy and ally positions
+    if (effectType === 'battery_drain' || effectType === 'puppet_master' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
       visualEffect.enemyPositions = opponentCards.filter(c => c.hp > 0).map((card, i) => {
         return [(-3 + i * 2), 0.5, playerRole === 'player1' ? -2 : 2]
       })
 
-      if (effectType === 'battery_drain') {
+      if (effectType === 'battery_drain' || effectType === 'puppet_master') {
         visualEffect.allyPositions = cards.filter(c => c.hp > 0).map((card, i) => {
           return [(-3 + i * 2), 0.5, playerRole === 'player1' ? 2 : -2]
         })
