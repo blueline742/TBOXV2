@@ -14,6 +14,7 @@ import { VFXLightning } from './3d/VFXLightning'
 import { VFXIceNova } from './3d/VFXIceNova'
 import { VFXIceNovaShockwave } from './3d/VFXIceNovaShockwave'
 import { VFXBatteryDrain } from './3d/VFXBatteryDrain'
+import { VFXPuppetMaster } from './3d/VFXPuppetMaster'
 import { VFXChaosShuffle } from './3d/VFXChaosShuffle'
 import { VFXSwordStrike } from './3d/VFXSwordStrike'
 import { VFXWhirlwindSlash } from './3d/VFXWhirlwindSlash'
@@ -129,14 +130,18 @@ export function GameScene() {
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost' | 'resurrection'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'puppet_master' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost' | 'resurrection'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
     targetPositions?: [number, number, number][]  // For multi-target effects
-    enemyPositions?: [number, number, number][]  // For Battery Drain
-    allyPositions?: [number, number, number][]  // For Bath Bomb / Battery Drain
+    enemyPositions?: [number, number, number][]  // For Battery Drain / Puppet Master
+    allyPositions?: [number, number, number][]  // For Bath Bomb / Battery Drain / Puppet Master
   }>>([])
+
+  // VFX Queue for performance - limit concurrent effects
+  const [effectQueue, setEffectQueue] = useState<SpellEffectData[]>([])
+  const MAX_CONCURRENT_EFFECTS = 3
 
   // Listen for spell effects from GameUI
   useEffect(() => {
@@ -148,6 +153,14 @@ export function GameScene() {
         if (prev.some(e => e.id === effectData.id)) {
           return prev
         }
+
+        // Performance optimization: Limit concurrent effects
+        if (prev.length >= MAX_CONCURRENT_EFFECTS) {
+          // Queue the effect instead of playing immediately
+          setEffectQueue(queue => [...queue, effectData])
+          return prev
+        }
+
         return [...prev, {
           id: effectData.id,
           type: effectData.type,
@@ -170,6 +183,31 @@ export function GameScene() {
     window.addEventListener('spellEffect' as any, handleSpellEffect)
     return () => window.removeEventListener('spellEffect' as any, handleSpellEffect)
   }, [])
+
+  // Process VFX queue when slots become available
+  useEffect(() => {
+    if (activeEffects.length < MAX_CONCURRENT_EFFECTS && effectQueue.length > 0) {
+      const nextEffect = effectQueue[0]
+      setEffectQueue(prev => prev.slice(1))
+
+      // Trigger the queued effect
+      setActiveEffects(prev => [...prev, {
+        id: nextEffect.id,
+        type: nextEffect.type,
+        position: nextEffect.position,
+        sourcePosition: nextEffect.sourcePosition,
+        targetPosition: nextEffect.targetPosition,
+        targetPositions: nextEffect.targetPositions,
+        enemyPositions: nextEffect.enemyPositions,
+        allyPositions: nextEffect.allyPositions
+      }])
+
+      const duration = nextEffect.type === 'extinction_protocol' ? 3500 : 2000
+      setTimeout(() => {
+        removeEffect(nextEffect.id)
+      }, duration)
+    }
+  }, [activeEffects.length, effectQueue])
 
   useEffect(() => {
     // AI COMPLETELY DISABLED - opponent_turn phase exists but does nothing
@@ -215,8 +253,8 @@ export function GameScene() {
         intensity={1.2}
         color="#fffaf0"
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
         shadow-camera-near={0.5}
         shadow-camera-far={50}
         shadow-camera-left={-10}
@@ -228,23 +266,14 @@ export function GameScene() {
       {/* Secondary fill light - softer shadows */}
       <directionalLight
         position={[-5, 8, 5]}
-        intensity={0.4}
+        intensity={0.3}
         color="#e6f3ff"
       />
 
-      {/* Rim light for depth */}
-      <pointLight
-        position={[0, 5, -8]}
-        intensity={0.5}
-        color="#ffd700"
-        distance={15}
-        decay={2}
-      />
-
-      {/* Soft uplight from table surface */}
+      {/* Soft uplight from table surface - reduced intensity for performance */}
       <pointLight
         position={[0, 0, 0]}
-        intensity={0.3}
+        intensity={0.2}
         color="#fff8dc"
         distance={20}
       />
@@ -334,6 +363,18 @@ export function GameScene() {
                 sourcePosition={effect.sourcePosition || effect.position}
                 enemyPositions={effect.enemyPositions || []}
                 allyPositions={effect.allyPositions || []}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'puppet_master') {
+            // Puppet Master: single green beam from enemy to ally
+            const enemyPos = effect.enemyPositions?.[0] || effect.targetPosition || [0, 0, -2]
+            const allyPos = effect.allyPositions?.[0] || effect.position
+            return (
+              <VFXPuppetMaster
+                key={effect.id}
+                enemyPosition={enemyPos}
+                allyPosition={allyPos}
                 onComplete={() => removeEffect(effect.id)}
               />
             )

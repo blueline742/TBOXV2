@@ -110,7 +110,8 @@ interface GameState extends GameMeta, Selection, AutoBattle, Cards, CombatLog {
 
 // ============= STORE CREATION =============
 const useOptimizedGameStore = create<GameState>()(
-  devtools(
+  // Only enable devtools in development for performance
+  (process.env.NODE_ENV === 'development' ? devtools : (f: any) => f)(
     subscribeWithSelector(
       immer((set, get) => ({
         // Initial State
@@ -517,9 +518,10 @@ const useOptimizedGameStore = create<GameState>()(
         }
       }))
     ),
-    {
+    // Devtools config only in development
+    process.env.NODE_ENV === 'development' ? {
       name: 'game-store',
-    }
+    } : undefined
   )
 )
 

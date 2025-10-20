@@ -18,7 +18,7 @@ import { preloadTurnSounds, playYourTurnSound } from '@/utils/soundPlayer'
 
 export interface SpellEffectData {
   id: string
-  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost' | 'resurrection'
+  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'puppet_master'
   position: [number, number, number]
   targetId: string
   sourcePosition?: [number, number, number]
@@ -326,7 +326,7 @@ export function GameUI() {
         let enemyPositions: [number, number, number][] | undefined
         let allyPositions: [number, number, number][] | undefined
 
-        if (effectType === 'battery_drain' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
+        if (effectType === 'battery_drain' || effectType === 'puppet_master' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
           enemyPositions = targetPositions
 
           console.log('[FIRE AURA DEBUG] Setting enemyPositions:', {
@@ -335,7 +335,7 @@ export function GameUI() {
             enemyPositions
           })
 
-          if (effectType === 'battery_drain') {
+          if (effectType === 'battery_drain' || effectType === 'puppet_master') {
             const allies = currentTurn === 'player' ? playerCards : opponentCards
             allyPositions = allies.filter(c => c.hp > 0).map((_, i) => {
               const x = -3 + i * 2

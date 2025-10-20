@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'extinction_protocol' | 'duck_swarm' | 'sword_strike' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'extinction_protocol' | 'duck_swarm' | 'sword_strike' | 'puppet_master' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
@@ -126,6 +126,62 @@ export function executeAbility(
     }
 
     // Return early for Battery Drain
+    return {
+      success: true,
+      message,
+      effects,
+      damages,
+      heals,
+      debuffs,
+      visualEffect
+    }
+  }
+
+  // Special handling for Puppet Master ability
+  if (ability.effect === 'puppet_master') {
+    visualEffect = 'battery_drain' // Reuse battery drain visual effect
+
+    // Pick a random living enemy
+    const enemyTargets = allOpponentCards.filter(card => card.hp > 0)
+    if (enemyTargets.length === 0) {
+      return {
+        success: false,
+        message: `${sourceCard.name} finds no enemies to control!`,
+        effects: [],
+        damages: [],
+        heals: [],
+        debuffs: []
+      }
+    }
+
+    const randomEnemy = enemyTargets[Math.floor(Math.random() * enemyTargets.length)]
+    const drainAmount = Math.min(15, randomEnemy.hp) // Don't drain more than they have
+
+    // Damage the random enemy
+    effects.push({ type: 'damage', targetId: randomEnemy.id, value: drainAmount })
+    const enemySide = allPlayerCards.find(c => c.id === randomEnemy.id) ? 'player' : 'opponent'
+    damages.push({ cardId: randomEnemy.id, amount: drainAmount, side: enemySide })
+
+    // Pick a random living ally to heal (excluding self if possible)
+    const allyTargets = allPlayerCards.filter(card => card.hp > 0 && card.hp < card.maxHp)
+    if (allyTargets.length > 0) {
+      const randomAlly = allyTargets[Math.floor(Math.random() * allyTargets.length)]
+      const healAmount = Math.min(drainAmount, randomAlly.maxHp - randomAlly.hp)
+
+      if (healAmount > 0) {
+        effects.push({ type: 'heal', targetId: randomAlly.id, value: healAmount })
+        const allySide = allPlayerCards.find(c => c.id === randomAlly.id) ? 'player' : 'opponent'
+        heals.push({ cardId: randomAlly.id, amount: healAmount, side: allySide })
+
+        message = `${sourceCard.name} steals ${drainAmount} HP from ${randomEnemy.name} and gives it to ${randomAlly.name}!`
+      } else {
+        message = `${sourceCard.name} drains ${drainAmount} HP from ${randomEnemy.name}!`
+      }
+    } else {
+      message = `${sourceCard.name} drains ${drainAmount} HP from ${randomEnemy.name}!`
+    }
+
+    // Return early for Puppet Master
     return {
       success: true,
       message,

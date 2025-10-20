@@ -593,7 +593,7 @@ function executeAbility(room, playerRole, targetId) {
       // Damage the random enemy
       randomEnemy.hp -= drainAmount
       damages.push({ cardId: randomEnemy.id, amount: drainAmount })
-      targets.push(randomEnemy)
+      targets.push(randomEnemy)  // First target: enemy being drained
 
       // Pick random living ally to heal
       const allyTargets = cards.filter(c => c.hp > 0 && c.hp < c.maxHp)
@@ -604,6 +604,7 @@ function executeAbility(room, playerRole, targetId) {
         if (healAmount > 0) {
           randomAlly.hp += healAmount
           heals.push({ cardId: randomAlly.id, amount: healAmount })
+          targets.push(randomAlly)  // Second target: ally being healed
           message = `${caster.name} steals ${drainAmount} HP from ${randomEnemy.name} and gives it to ${randomAlly.name}!`
         }
       } else {
@@ -788,17 +789,24 @@ function executeAbility(room, playerRole, targetId) {
       targetPositions: targetPositionsList // All target positions for multi-target
     }
 
-    // For Battery Drain, Puppet Master, Chaos Shuffle, and Fire Aura (fire_breath), add enemy and ally positions
-    if (effectType === 'battery_drain' || effectType === 'puppet_master' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
+    // For Battery Drain, Chaos Shuffle, and Fire Aura (fire_breath), add enemy and ally positions
+    if (effectType === 'battery_drain' || effectType === 'chaos_shuffle' || effectType === 'fire_breath') {
       visualEffect.enemyPositions = opponentCards.filter(c => c.hp > 0).map((card, i) => {
         return [(-3 + i * 2), 0.5, playerRole === 'player1' ? -2 : 2]
       })
 
-      if (effectType === 'battery_drain' || effectType === 'puppet_master') {
+      if (effectType === 'battery_drain') {
         visualEffect.allyPositions = cards.filter(c => c.hp > 0).map((card, i) => {
           return [(-3 + i * 2), 0.5, playerRole === 'player1' ? 2 : -2]
         })
       }
+    }
+
+    // For Puppet Master, use target positions directly (already calculated from specific random targets)
+    if (effectType === 'puppet_master') {
+      // enemyPositions and allyPositions will be set from targetPositionsList which already contains the specific targets
+      visualEffect.enemyPositions = targetPositionsList.length > 0 ? [targetPositionsList[0]] : []
+      visualEffect.allyPositions = targetPositionsList.length > 1 ? [targetPositionsList[1]] : []
     }
 
     // For Bath Bomb, add ally positions (already calculated in targetPositionsList)

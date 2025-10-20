@@ -66,8 +66,14 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
   const canBeSelected = phase === 'player_turn' && side === 'player' && !isDead && !isStunned
 
   // Check if the currently selected ability targets allies (use autoSelectedCardId for auto-battle)
+  // OPTIMIZED: Use direct map lookup instead of array creation + iteration
   const activeCardId = autoSelectedCardId || selectedCardId
-  const selectedCard = activeCardId ? [...Array.from(useOptimizedGameStore.getState().playerCards.values()), ...Array.from(useOptimizedGameStore.getState().opponentCards.values())].find(c => c.id === activeCardId) : null
+  const selectedCard = useMemo(() => {
+    if (!activeCardId) return null
+    const store = useOptimizedGameStore.getState()
+    return store.playerCards.get(activeCardId) || store.opponentCards.get(activeCardId) || null
+  }, [activeCardId])
+
   const selectedAbility = selectedCard && autoSelectedAbilityIndex !== null ? selectedCard.abilities[autoSelectedAbilityIndex] : null
   const isAllyTargetingAbility = selectedAbility?.targetType === 'allies'
   const isReviveAbility = selectedAbility?.effect === 'revive'
@@ -86,7 +92,8 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
     if (!meshRef.current) return
 
     // Update screen position for debuff/shield overlay (only if card has debuffs - performance optimization)
-    if (onScreenPositionUpdate && card.debuffs.length > 0 && state.clock.elapsedTime % 0.1 < delta) {
+    // Throttled to every 200ms instead of 100ms for better performance
+    if (onScreenPositionUpdate && card.debuffs.length > 0 && state.clock.elapsedTime % 0.2 < delta) {
       const vector = new Vector3()
       meshRef.current.getWorldPosition(vector)
       vector.project(camera)

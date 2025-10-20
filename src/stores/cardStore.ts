@@ -105,7 +105,7 @@ const toyCards: Omit<CardData, 'id' | 'hp' | 'debuffs' | 'position'>[] = [
     maxHp: 90,
     texture: '/voodoonft.webp',
     abilities: [
-      { name: 'Cannon Blast', description: 'Area damage', damage: 25, targetType: 'all' },
+      { name: 'Puppet Master', description: 'Steal 15 HP from a random enemy and give it to a random ally', targetType: 'random', effect: 'puppet_master' },
       { name: 'Cutlass Slash', description: 'Single target', damage: 30, targetType: 'single' },
       { name: 'Rum Heal', description: 'Heal self', heal: 30, targetType: 'self' }
     ]
