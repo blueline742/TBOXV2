@@ -5,7 +5,7 @@ export interface Ability {
   description: string
   damage?: number
   heal?: number
-  effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison' | 'revive' | 'spell_steal' | 'battery_drain' | 'chaos_shuffle' | 'weaken' | 'water_squirt' | 'bath_bomb'
+  effect?: 'freeze' | 'burn' | 'stun' | 'shield' | 'poison' | 'revive' | 'spell_steal' | 'battery_drain' | 'puppet_master' | 'chaos_shuffle' | 'weaken' | 'water_squirt' | 'bath_bomb'
   targetType: 'single' | 'all' | 'self' | 'allies' | 'dead_allies' | 'random'
   cooldown?: number
   currentCooldown?: number
