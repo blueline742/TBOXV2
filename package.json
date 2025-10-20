@@ -45,5 +45,32 @@
   },
   "engines": {
     "node": ">=20.17.0"
+  },
+  "overrides": {
+    "@solana/codecs-numbers": {
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "@solana/codecs-strings": {
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "@solana/errors": {
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "@solana/fast-stable-stringify": {
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "@solana/functional": {
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    }
   }
 }
