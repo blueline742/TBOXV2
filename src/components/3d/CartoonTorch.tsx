@@ -105,13 +105,13 @@ export function CartoonTorch({ positions }: CartoonTorchProps) {
 
           {/* Animated flame */}
           <mesh
-            ref={(el) => { if (el) flameRefs.current[index] = el }}
+            ref={(el: THREE.Mesh | null) => { if (el) flameRefs.current[index] = el }}
             geometry={flameGeometry}
             position={[0, 1.4, 0]}
           >
             {/* @ts-ignore */}
             <flameMaterial
-              ref={(el) => { if (el) materialRefs.current[index] = el }}
+              ref={(el: any) => { if (el) materialRefs.current[index] = el }}
               transparent
               depthWrite={false}
               side={THREE.DoubleSide}
@@ -121,7 +121,7 @@ export function CartoonTorch({ positions }: CartoonTorchProps) {
 
           {/* Flickering point light - subtle torch ambience */}
           <pointLight
-            ref={(el) => { if (el) lightRefs.current[index] = el }}
+            ref={(el: THREE.PointLight | null) => { if (el) lightRefs.current[index] = el }}
             position={[0, 1.4, 0]}
             color="#ff9944"
             intensity={2}
