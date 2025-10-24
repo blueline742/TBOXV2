@@ -59,14 +59,25 @@ interface Cards {
   opponentCards: Map<string, CardData>
 }
 
+interface ManaSystem {
+  playerMana: number
+  opponentMana: number
+  maxMana: number
+}
+
 // ============= STORE SLICES =============
-interface GameState extends GameMeta, Selection, AutoBattle, Cards, CombatLog {
+interface GameState extends GameMeta, Selection, AutoBattle, Cards, CombatLog, ManaSystem {
   // Actions - Game Flow
   setPhase: (phase: GamePhase) => void
   endTurn: () => void
   setCurrentTurn: (turn: 'player' | 'opponent') => void
   checkWinCondition: () => void
   resetGame: () => void
+
+  // Actions - Mana System
+  addMana: (side: 'player' | 'opponent', amount: number) => void
+  spendMana: (side: 'player' | 'opponent', amount: number) => void
+  resetMana: () => void
 
   // Actions - Selection
   selectCard: (cardId: string | null) => void
@@ -131,6 +142,11 @@ const useOptimizedGameStore = create<GameState>()(
         entries: [],
         maxEntries: 10,
 
+        // Mana System
+        playerMana: 0,
+        opponentMana: 0,
+        maxMana: 5,
+
         // ============= GAME FLOW ACTIONS =============
         setPhase: (phase) => set((state) => {
           state.phase = phase
@@ -154,6 +170,13 @@ const useOptimizedGameStore = create<GameState>()(
             state.currentTurn = state.currentTurn === 'player' ? 'opponent' : 'player'
             state.phase = state.currentTurn === 'player' ? 'player_turn' : 'opponent_turn'
             state.turnNumber += 1
+
+            // Add mana for the new turn (max 5)
+            if (state.currentTurn === 'player') {
+              state.playerMana = Math.min(state.playerMana + 1, state.maxMana)
+            } else {
+              state.opponentMana = Math.min(state.opponentMana + 1, state.maxMana)
+            }
           }, false, 'endTurn')
         },
 
@@ -199,6 +222,9 @@ const useOptimizedGameStore = create<GameState>()(
           state.gameMessage = ''
           state.playerCards.clear()
           state.opponentCards.clear()
+          // Reset mana
+          state.playerMana = 0
+          state.opponentMana = 0
         }),
 
         // ============= SELECTION ACTIONS =============
@@ -235,6 +261,28 @@ const useOptimizedGameStore = create<GameState>()(
 
         setGameMessage: (message) => set((state) => {
           state.gameMessage = message
+        }),
+
+        // ============= MANA SYSTEM ACTIONS =============
+        addMana: (side, amount) => set((state) => {
+          if (side === 'player') {
+            state.playerMana = Math.min(state.playerMana + amount, state.maxMana)
+          } else {
+            state.opponentMana = Math.min(state.opponentMana + amount, state.maxMana)
+          }
+        }),
+
+        spendMana: (side, amount) => set((state) => {
+          if (side === 'player') {
+            state.playerMana = Math.max(0, state.playerMana - amount)
+          } else {
+            state.opponentMana = Math.max(0, state.opponentMana - amount)
+          }
+        }),
+
+        resetMana: () => set((state) => {
+          state.playerMana = 0
+          state.opponentMana = 0
         }),
 
         // ============= CARD MANAGEMENT =============
@@ -365,6 +413,12 @@ const useOptimizedGameStore = create<GameState>()(
                   // Apply debuff damage
                   if (debuff.damage) {
                     card.hp = Math.max(0, card.hp - debuff.damage)
+                  }
+
+                  // Apply heal over time
+                  if (debuff.type === 'heal_over_time' && debuff.healAmount) {
+                    const healPerTick = debuff.healAmount * (debuff.stacks || 1) // Multiply by stacks
+                    card.hp = Math.min(card.maxHp, card.hp + healPerTick)
                   }
 
                   // Reduce duration
@@ -573,6 +627,20 @@ export const useGameActions = () => useOptimizedGameStore(
     setCurrentTurn: state.setCurrentTurn,
   }))
 )
+
+// Mana System Selectors
+export const useMana = () => useOptimizedGameStore(
+  useShallow((state) => ({
+    playerMana: state.playerMana,
+    opponentMana: state.opponentMana,
+    maxMana: state.maxMana,
+    spendMana: state.spendMana,
+    addMana: state.addMana,
+  }))
+)
+
+export const usePlayerMana = () => useOptimizedGameStore((state) => state.playerMana)
+export const useOpponentMana = () => useOptimizedGameStore((state) => state.opponentMana)
 
 // Auto-Battle Selectors
 export const useAutoBattle = () => useOptimizedGameStore(

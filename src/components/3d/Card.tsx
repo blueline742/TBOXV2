@@ -32,7 +32,8 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
   const phase = useGamePhase()
   const currentTurn = useCurrentTurn()
 
-  const isSelected = selectedCardId === card.id || autoSelectedCardId === card.id
+  const isSelected = selectedCardId === card.id
+  const isAutoSelected = autoSelectedCardId === card.id
   const isTarget = targetCardId === card.id
   const isDead = card.hp <= 0
 
@@ -43,9 +44,12 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
     isPoisoned: card.debuffs.some(d => d.type === 'poisoned'),
     isStunned: card.debuffs.some(d => d.type === 'stunned'),
     hasFireAura: card.debuffs.find(d => d.type === 'fire_aura'),
+    hasHealReduction: card.debuffs.some(d => d.type === 'heal_reduction'),
+    isUntargetable: card.debuffs.some(d => d.type === 'untargetable'),
+    hasHealOverTime: card.debuffs.some(d => d.type === 'heal_over_time'),
   }), [card.debuffs])
 
-  const { isFrozen, isBurned, isPoisoned, isStunned, hasFireAura } = debuffFlags
+  const { isFrozen, isBurned, isPoisoned, isStunned, hasFireAura, hasHealReduction, isUntargetable, hasHealOverTime } = debuffFlags
   const fireAuraStacks = hasFireAura?.stacks || 0
 
   // Detect HP changes for visual feedback
@@ -79,7 +83,8 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
   const isReviveAbility = selectedAbility?.effect === 'revive'
 
   // Allow targeting allies if ally-targeting ability is selected, dead allies if revival ability, otherwise only opponents
-  const canBeTargeted = phase === 'player_turn' && (
+  // Untargetable cards cannot be targeted by opponents
+  const canBeTargeted = phase === 'player_turn' && !isUntargetable && (
     (side === 'opponent' && !isDead && !isAllyTargetingAbility && !isReviveAbility) ||
     (side === 'player' && !isDead && isAllyTargetingAbility) ||
     (side === 'player' && isDead && isReviveAbility)
@@ -130,12 +135,12 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
   })
 
   const handleClick = () => {
-    // If this card can be targeted (enemy or ally depending on ability)
-    if (canBeTargeted) {
+    // If we're waiting for a target, handle target selection
+    if (canBeTargeted && autoSelectedCardId && autoSelectedAbilityIndex !== null) {
       selectTarget(card.id)
-    } else if (canBeSelected && side === 'player') {
-      // Optional: disable card selection in auto-battle mode
-      // For now, still allow it for visibility but it won't affect auto-selection
+    }
+    // Manual card selection for player cards during player turn
+    else if (canBeSelected && side === 'player' && !autoSelectedCardId) {
       selectCard(isSelected ? null : card.id)
     }
   }
@@ -150,11 +155,14 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
     //   return intensity === 3 ? '#ff4500' : intensity === 2 ? '#ff6600' : '#ff8800'
     // }
     // if (isBurned) return '#FF6B6B'
+    if (hasHealOverTime) return '#00ff88' // Light green for heal over time
+    if (isUntargetable) return '#ffd700' // Gold for untargetable
+    if (hasHealReduction) return '#8b00ff' // Purple for heal reduction (cursed strings)
     if (isFrozen) return '#4FC3F7'
     if (isPoisoned) return '#66BB6A'
     if (isStunned) return '#FFB74D'
     return '#ffffff'
-  }, [isDead, isFrozen, isBurned, isPoisoned, isStunned, damageFlash, healFlash, hasFireAura, fireAuraStacks])
+  }, [isDead, isFrozen, isBurned, isPoisoned, isStunned, damageFlash, healFlash, hasFireAura, fireAuraStacks, hasHealReduction, isUntargetable, hasHealOverTime])
 
   return (
     <group position={position}>
@@ -173,13 +181,17 @@ export function Card({ card: initialCard, position, side, index, onScreenPositio
           emissive={
             damageFlash ? '#ff0000' :
             healFlash ? '#00ff00' :
-            isSelected ? '#ffaa00' :
+            isSelected ? '#00ff00' :  // Green for manually selected card
+            isAutoSelected ? '#ffaa00' :  // Orange for auto-selected
             isTarget ? '#ff0000' :
+            hovered && canBeSelected ? '#00ff00' :  // Green hover for selectable
+            hovered && canBeTargeted ? '#ffaa00' :  // Orange hover for targetable
             '#000000'
           }
           emissiveIntensity={
             damageFlash || healFlash ? 0.8 :
-            isSelected || isTarget ? 0.3 :
+            isSelected || isAutoSelected || isTarget ? 0.4 :
+            hovered && (canBeSelected || canBeTargeted) ? 0.2 :
             0
           }
         />

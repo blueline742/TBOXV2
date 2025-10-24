@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { VFXEmitter } from 'wawa-vfx'
+import { materialPool } from '@/utils/vfxPool'
 
 interface VFXBatteryDrainProps {
   sourcePosition: [number, number, number]  // Arch Wizard position
@@ -31,7 +32,7 @@ function EnergyBeam({
   const [progress, setProgress] = useState(0)
   const startTime = useRef(Date.now() + delay * 1000)
 
-  console.log('[ENERGY BEAM] Created - Start:', start, 'End:', end, 'Color:', color)
+  // Removed console.log for performance - reduce main thread work
 
   // Create curved path between points
   const curve = useMemo(() => {
@@ -43,13 +44,20 @@ function EnergyBeam({
     return new THREE.QuadraticBezierCurve3(startVec, midPoint, endVec)
   }, [start, end])
 
-  // Create tube geometry
+  // Create tube geometry - REDUCED SEGMENTS for performance
   const geometry = useMemo(() => {
-    return new THREE.TubeGeometry(curve, 50, 0.08, 8, false)
+    return new THREE.TubeGeometry(curve, 24, 0.08, 6, false) // Was 50 segments, 8 radial - now 24, 6
   }, [curve])
 
-  // Custom shader material for energy effect
+  // Use pre-compiled shader material from pool
   const material = useMemo(() => {
+    const pooledMaterial = materialPool.getEnergyBeamShader(color)
+    if (pooledMaterial) {
+      return pooledMaterial
+    }
+
+    // Fallback: create new material if pool doesn't have it
+    console.warn(`[VFX] Creating new shader for color ${color} - pool miss`)
     return new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
@@ -69,7 +77,6 @@ function EnergyBeam({
 
           vec3 pos = position;
 
-          // Wave effect along the beam
           float wave = sin(uv.x * 10.0 - time * 5.0) * 0.05;
           pos.y += wave;
           pos.x += cos(uv.x * 8.0 - time * 4.0) * 0.03;
@@ -86,22 +93,15 @@ function EnergyBeam({
         varying float vProgress;
 
         void main() {
-          // Only show the part that has animated
           if (vProgress > progress) {
             discard;
           }
 
-          // Energy flow effect
           float flow = sin(vProgress * 20.0 - time * 10.0) * 0.3 + 0.7;
-
-          // Glow at edges
           float glow = 1.0 - abs(vUv.y - 0.5) * 2.0;
           glow = pow(glow, 2.0);
-
-          // Fade at ends
           float endFade = smoothstep(0.0, 0.1, vProgress) * smoothstep(1.0, 0.9, vProgress);
-
-          vec3 finalColor = color + vec3(0.5) * flow; // Brighter core
+          vec3 finalColor = color + vec3(0.5) * flow;
           float finalAlpha = opacity * glow * endFade * (0.8 + flow * 0.2);
 
           gl_FragColor = vec4(finalColor, finalAlpha);
@@ -119,6 +119,14 @@ function EnergyBeam({
       setTimeout(onComplete, 200)
     }
   }, [progress, onComplete])
+
+  // Cleanup geometry on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (geometry) geometry.dispose()
+      if (material) material.dispose()
+    }
+  }, [geometry, material])
 
   useFrame((state) => {
     if (materialRef.current) {
@@ -143,9 +151,9 @@ function EnergyBeam({
         <primitive attach="material" object={material} ref={materialRef} />
       </mesh>
 
-      {/* Glow sphere at start */}
+      {/* Glow sphere at start - reduced segments for performance */}
       <mesh position={start}>
-        <sphereGeometry args={[0.15, 16, 16]} />
+        <sphereGeometry args={[0.15, 8, 8]} />
         <meshBasicMaterial color={color} transparent opacity={0.8} />
       </mesh>
 
@@ -164,11 +172,7 @@ export function VFXBatteryDrain({
   const [phase, setPhase] = useState<'draining' | 'redistributing' | 'complete'>('draining')
   const groupRef = useRef<THREE.Group>(null)
 
-  // Debug logging
-  console.log('[VFX BATTERY DRAIN] Phase:', phase)
-  console.log('[VFX BATTERY DRAIN] Source:', sourcePosition)
-  console.log('[VFX BATTERY DRAIN] Enemies:', enemyPositions)
-  console.log('[VFX BATTERY DRAIN] Allies:', allyPositions)
+  // Removed debug logging for performance
 
   useEffect(() => {
     // Phase transitions
@@ -192,9 +196,9 @@ export function VFXBatteryDrain({
 
   return (
     <group ref={groupRef}>
-      {/* Central nexus at Arch Wizard - pulses between phases */}
+      {/* Central nexus at Arch Wizard - pulses between phases - OPTIMIZED */}
       <mesh position={sourcePosition}>
-        <sphereGeometry args={[0.3, 32, 32]} />
+        <sphereGeometry args={[0.3, 16, 16]} />
         <meshStandardMaterial
           color={phase === 'draining' ? 0xff0044 : 0x00ff44}
           emissive={phase === 'draining' ? 0xff0044 : 0x00ff44}
@@ -204,9 +208,9 @@ export function VFXBatteryDrain({
         />
       </mesh>
 
-      {/* Rotating ring around caster */}
+      {/* Rotating ring around caster - OPTIMIZED */}
       <mesh position={sourcePosition}>
-        <torusGeometry args={[0.8, 0.05, 8, 32]} />
+        <torusGeometry args={[0.8, 0.05, 6, 24]} />
         <meshStandardMaterial
           color={phase === 'draining' ? 0xff4444 : 0x44ff44}
           emissive={phase === 'draining' ? 0xff0044 : 0x00ff44}
@@ -259,9 +263,9 @@ export function VFXBatteryDrain({
             fadeOut={0.5}
           /> */}
 
-          {/* Red damage ring at enemy */}
+          {/* Red damage ring at enemy - OPTIMIZED */}
           <mesh position={[enemyPos[0], 0.1, enemyPos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.3, 0.5, 32]} />
+            <ringGeometry args={[0.3, 0.5, 16]} />
             <meshBasicMaterial
               color={0xff0044}
               transparent
@@ -311,9 +315,9 @@ export function VFXBatteryDrain({
             fadeOut={0.3}
           /> */}
 
-          {/* Green heal glow at ally */}
+          {/* Green heal glow at ally - OPTIMIZED */}
           <mesh position={allyPos}>
-            <sphereGeometry args={[0.4, 16, 16]} />
+            <sphereGeometry args={[0.4, 8, 8]} />
             <meshBasicMaterial
               color={0x00ff44}
               transparent
@@ -321,9 +325,9 @@ export function VFXBatteryDrain({
             />
           </mesh>
 
-          {/* Heal ring on ground */}
+          {/* Heal ring on ground - OPTIMIZED */}
           <mesh position={[allyPos[0], 0.1, allyPos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.2, 0.4, 32]} />
+            <ringGeometry args={[0.2, 0.4, 16]} />
             <meshBasicMaterial
               color={0x00ff44}
               transparent

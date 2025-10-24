@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { GameUI } from '@/components/GameUI'
+import { ManualGameUI } from '@/components/ManualGameUI'
 import { WalletConnect } from '@/components/WalletConnect'
 import { MultiplayerLobby } from '@/components/MultiplayerLobby'
 
@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <main className="w-full h-screen relative bg-gradient-to-b from-blue-900 to-purple-900">
       <GameScene />
-      <GameUI />
+      <ManualGameUI />
       <WalletConnect />
       <MultiplayerLobby />
     </main>

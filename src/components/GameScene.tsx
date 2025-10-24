@@ -15,6 +15,12 @@ import { VFXIceNova } from './3d/VFXIceNova'
 import { VFXIceNovaShockwave } from './3d/VFXIceNovaShockwave'
 import { VFXBatteryDrain } from './3d/VFXBatteryDrain'
 import { VFXPuppetMaster } from './3d/VFXPuppetMaster'
+import { VFXCurseStrings } from './3d/VFXCurseStrings'
+import { VFXCursePuppets } from './3d/VFXCursePuppets'
+import { VFXPuppetShow } from './3d/VFXPuppetShow'
+import { VFXMedication } from './3d/VFXMedication'
+import { VFXSurgery } from './3d/VFXSurgery'
+import { VFXClearRevive } from './3d/VFXClearRevive'
 import { VFXChaosShuffle } from './3d/VFXChaosShuffle'
 import { VFXSwordStrike } from './3d/VFXSwordStrike'
 import { VFXWhirlwindSlash } from './3d/VFXWhirlwindSlash'
@@ -31,13 +37,14 @@ import { VFXResurrection } from './3d/VFXResurrection'
 import VFXSystem from './vfx/VFXSystem'
 import { VFXPrewarmer } from './vfx/VFXPrewarmer'
 import { aiSelectAction, executeAbility, applyAbilityEffects, processDebuffDamage } from '@/utils/abilityLogic'
-import { SpellEffectData } from './GameUI'
+import { SpellEffectData } from './ManualGameUI'
 import { preloadCardTextures, preloadSceneAssets } from '@/utils/texturePreloader'
 import { CardOverlay, CardPosition } from './CardOverlay'
 import { DynamicCamera } from './3d/DynamicCamera'
 import { LoadingScreen } from './LoadingScreen'
 import { CardStatusUI } from './CardStatusUI'
 import { CartoonTorch } from './3d/CartoonTorch'
+import { initializeVFXPools } from '@/utils/vfxPool'
 
 export function GameScene() {
   const store = useOptimizedGameStore()
@@ -63,10 +70,16 @@ export function GameScene() {
     return () => window.removeEventListener('resize', updateFov)
   }, [])
 
-  // Preload all textures and scene assets on mount
+  // Preload all textures, scene assets, and VFX pools on mount
   useEffect(() => {
+    console.log('[GAME SCENE] Initializing VFX pools...')
+    initializeVFXPools()
+
+    console.log('[GAME SCENE] Preloading textures...')
     preloadCardTextures()
     preloadSceneAssets()
+
+    console.log('[GAME SCENE] All assets preloaded and ready')
   }, [])
 
   // Pre-warm VFX shaders to prevent first-use lag
@@ -130,7 +143,7 @@ export function GameScene() {
 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: string
-    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'puppet_master' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost' | 'resurrection'
+    type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'puppet_master' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'curse_strings' | 'curse_puppets' | 'puppet_show' | 'medication' | 'surgery' | 'clear_revive'
     position: [number, number, number]
     sourcePosition?: [number, number, number]
     targetPosition?: [number, number, number]
@@ -375,6 +388,61 @@ export function GameScene() {
                 key={effect.id}
                 enemyPosition={enemyPos}
                 allyPosition={allyPos}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'curse_strings') {
+            // Curse of Strings: Purple strings wrapping around target
+            return (
+              <VFXCurseStrings
+                key={effect.id}
+                targetPosition={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'curse_puppets') {
+            // Curse of Puppets: String connection copying spell
+            return (
+              <VFXCursePuppets
+                key={effect.id}
+                sourcePosition={effect.sourcePosition || effect.position}
+                targetPosition={effect.targetPosition || [0, 0, -2]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'puppet_show') {
+            // Puppet Show: Theater stage making ally untargetable
+            return (
+              <VFXPuppetShow
+                key={effect.id}
+                targetPosition={effect.targetPosition || effect.position}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'medication') {
+            // Medication: Healing over time effect
+            return (
+              <VFXMedication
+                key={effect.id}
+                targetPosition={effect.targetPosition || effect.position}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'surgery') {
+            // Surgery: Cleanse DOT effects from team
+            return (
+              <VFXSurgery
+                key={effect.id}
+                targetPositions={effect.allyPositions || [effect.position]}
+                onComplete={() => removeEffect(effect.id)}
+              />
+            )
+          } else if (effect.type === 'clear_revive') {
+            // Clear!: Defibrillator revival effect
+            return (
+              <VFXClearRevive
+                key={effect.id}
+                targetPosition={effect.targetPosition || effect.position}
                 onComplete={() => removeEffect(effect.id)}
               />
             )

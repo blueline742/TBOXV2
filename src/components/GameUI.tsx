@@ -18,7 +18,7 @@ import { preloadTurnSounds, playYourTurnSound } from '@/utils/soundPlayer'
 
 export interface SpellEffectData {
   id: string
-  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'puppet_master'
+  type: 'freeze' | 'fire' | 'lightning' | 'heal' | 'poison' | 'fireball' | 'chain_lightning' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'sword_strike' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'extinction_protocol' | 'water_squirt' | 'bath_bomb' | 'duck_swarm' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'puppet_master' | 'curse_strings' | 'curse_puppets' | 'puppet_show' | 'medication' | 'surgery' | 'clear_revive'
   position: [number, number, number]
   targetId: string
   sourcePosition?: [number, number, number]

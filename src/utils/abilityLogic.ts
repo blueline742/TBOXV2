@@ -6,7 +6,7 @@ let lastEnemyAbility: Ability | null = null
 export interface AbilityResult {
   success: boolean
   message: string
-  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'extinction_protocol' | 'duck_swarm' | 'sword_strike' | 'puppet_master' // Added for spell visuals
+  visualEffect?: 'fire' | 'freeze' | 'lightning' | 'heal' | 'poison' | 'ice_nova' | 'battery_drain' | 'chaos_shuffle' | 'whirlwind_slash' | 'shield' | 'fire_breath' | 'mecha_roar' | 'water_squirt' | 'bath_bomb' | 'laser_beam' | 'shield_boost' | 'resurrection' | 'extinction_protocol' | 'duck_swarm' | 'sword_strike' | 'puppet_master' | 'curse_strings' | 'curse_puppets' | 'puppet_show' | 'medication' | 'surgery' | 'clear_revive' // Added for spell visuals
   effects: Array<{
     type: 'damage' | 'heal' | 'debuff' | 'effect'
     targetId: string
@@ -51,19 +51,28 @@ export function executeAbility(
       if (!targetCard) {
         return { success: false, message: 'No target selected!', effects: [] }
       }
+      // Check if target is untargetable (only for enemy targets)
+      const isEnemyTarget = allOpponentCards.find(c => c.id === targetCard.id)
+      if (isEnemyTarget && targetCard.debuffs.some(d => d.type === 'untargetable')) {
+        return { success: false, message: `${targetCard.name} is untargetable!`, effects: [] }
+      }
       targets = [targetCard]
       break
 
     case 'all':
       // Special handling for Extinction Protocol - select 2 random targets
       if (ability.name === 'Extinction Protocol') {
-        const aliveOpponents = allOpponentCards.filter(card => card.hp > 0)
+        const aliveOpponents = allOpponentCards.filter(card =>
+          card.hp > 0 && !card.debuffs.some(d => d.type === 'untargetable')
+        )
         const numTargets = Math.min(2, aliveOpponents.length)
         const shuffled = [...aliveOpponents].sort(() => Math.random() - 0.5)
         targets = shuffled.slice(0, numTargets)
         console.log('[EXTINCTION LOGIC] Selected targets:', targets.map(t => ({ id: t.id, name: t.name })))
       } else {
-        targets = allOpponentCards.filter(card => card.hp > 0)
+        targets = allOpponentCards.filter(card =>
+          card.hp > 0 && !card.debuffs.some(d => d.type === 'untargetable')
+        )
       }
       break
 
@@ -236,6 +245,236 @@ export function executeAbility(
     }
   }
 
+  // Special handling for Curse of Strings (Cursed Marionette ability)
+  if (ability.effect === 'curse_of_strings') {
+    visualEffect = 'curse_strings'
+
+    if (!targetCard) {
+      return { success: false, message: 'No target selected!', effects: [] }
+    }
+
+    const healReductionDebuff: Debuff = {
+      type: 'heal_reduction',
+      duration: 999, // Permanent
+      healingReduction: 0.7 // 70% reduction
+    }
+
+    effects.push({ type: 'debuff', targetId: targetCard.id, debuff: healReductionDebuff })
+    const side = allPlayerCards.find(c => c.id === targetCard.id) ? 'player' : 'opponent'
+    debuffs.push({ cardId: targetCard.id, debuff: healReductionDebuff, side })
+
+    message = `${sourceCard.name} wraps ${targetCard.name} in cursed strings! Healing reduced by 70%!`
+
+    return {
+      success: true,
+      message,
+      effects,
+      damages,
+      heals,
+      debuffs,
+      visualEffect
+    }
+  }
+
+  // Special handling for Curse of Puppets (Cursed Marionette ability)
+  if (ability.effect === 'curse_of_puppets') {
+    visualEffect = 'curse_puppets'
+
+    if (!targetCard) {
+      return { success: false, message: 'No target selected!', effects: [] }
+    }
+
+    // Get a random ability from the target
+    const targetAbilities = targetCard.abilities.filter(ab => ab.currentCooldown === 0)
+    if (targetAbilities.length === 0) {
+      return { success: false, message: `${targetCard.name} has no available abilities to copy!`, effects: [] }
+    }
+
+    const randomAbility = targetAbilities[Math.floor(Math.random() * targetAbilities.length)]
+
+    // Execute the copied ability with Cursed Marionette as the source
+    const copiedResult = executeAbility(
+      randomAbility,
+      sourceCard,
+      targetCard, // Keep the same target for simplicity
+      allPlayerCards,
+      allOpponentCards
+    )
+
+    if (copiedResult.success) {
+      message = `${sourceCard.name} puppeteers ${targetCard.name}'s ${randomAbility.name}! ${copiedResult.message}`
+      return {
+        ...copiedResult,
+        message,
+        visualEffect: 'curse_puppets' // Override with our visual effect
+      }
+    } else {
+      message = `${sourceCard.name} tries to puppet ${targetCard.name} but the spell fails!`
+      return {
+        success: false,
+        message,
+        effects: [],
+        damages: [],
+        heals: [],
+        debuffs: []
+      }
+    }
+  }
+
+  // Special handling for Puppet Show (Cursed Marionette ability)
+  if (ability.effect === 'puppet_show') {
+    visualEffect = 'puppet_show'
+
+    if (!targetCard) {
+      return { success: false, message: 'No target selected!', effects: [] }
+    }
+
+    // Check if target is an ally
+    const isAlly = allPlayerCards.find(c => c.id === targetCard.id)
+    if (!isAlly) {
+      return { success: false, message: 'Puppet Show can only target allies!', effects: [] }
+    }
+
+    const untargetableDebuff: Debuff = {
+      type: 'untargetable',
+      duration: 2 // 2 turns
+    }
+
+    effects.push({ type: 'debuff', targetId: targetCard.id, debuff: untargetableDebuff })
+    const side = 'player' // Always player side since it's an ally
+    debuffs.push({ cardId: targetCard.id, debuff: untargetableDebuff, side })
+
+    message = `${sourceCard.name} makes ${targetCard.name} perform a puppet show! They are now untargetable for 2 turns!`
+
+    return {
+      success: true,
+      message,
+      effects,
+      damages,
+      heals,
+      debuffs,
+      visualEffect
+    }
+  }
+
+  // Special handling for Medication (The Doctor ability)
+  if (ability.effect === 'medication') {
+    visualEffect = 'medication'
+
+    if (!targetCard) {
+      return { success: false, message: 'No target selected!', effects: [] }
+    }
+
+    // Check if target is an ally
+    const isAlly = allPlayerCards.find(c => c.id === targetCard.id)
+    if (!isAlly) {
+      return { success: false, message: 'Medication can only be given to allies!', effects: [] }
+    }
+
+    // Check existing medication stacks
+    const existingMedication = targetCard.debuffs.find(d => d.type === 'heal_over_time')
+    const currentStacks = existingMedication?.stacks || 0
+    const newStacks = Math.min(currentStacks + 1, 3) // Max 3 stacks
+
+    const medicationDebuff: Debuff = {
+      type: 'heal_over_time',
+      duration: 999, // Permanent until card dies
+      healAmount: 3, // 3 HP per turn per stack
+      stacks: newStacks,
+      maxStacks: 3
+    }
+
+    effects.push({ type: 'debuff', targetId: targetCard.id, debuff: medicationDebuff })
+    const side = 'player'
+    debuffs.push({ cardId: targetCard.id, debuff: medicationDebuff, side })
+
+    message = `${sourceCard.name} gives ${targetCard.name} medication! (${newStacks}/3 stacks, healing ${newStacks * 3} HP/turn)`
+
+    return {
+      success: true,
+      message,
+      effects,
+      damages,
+      heals,
+      debuffs,
+      visualEffect
+    }
+  }
+
+  // Special handling for Surgery (The Doctor ability)
+  if (ability.effect === 'surgery') {
+    visualEffect = 'surgery'
+
+    // Remove all DOT debuffs from all allies
+    const dotDebuffTypes = ['burned', 'poisoned', 'fire_aura']
+    let removedCount = 0
+
+    allPlayerCards.forEach(ally => {
+      if (ally.hp > 0) {
+        const dotsToRemove = ally.debuffs.filter(d => dotDebuffTypes.includes(d.type))
+        if (dotsToRemove.length > 0) {
+          removedCount += dotsToRemove.length
+          // Remove DOT debuffs directly
+          ally.debuffs = ally.debuffs.filter(d => !dotDebuffTypes.includes(d.type))
+          effects.push({ type: 'effect', targetId: ally.id })
+        }
+      }
+    })
+
+    if (removedCount > 0) {
+      message = `${sourceCard.name} performs surgery, removing ${removedCount} damage over time effects from the team!`
+    } else {
+      message = `${sourceCard.name} performs surgery but there are no DOT effects to remove!`
+    }
+
+    return {
+      success: true,
+      message,
+      effects,
+      damages,
+      heals,
+      debuffs,
+      visualEffect
+    }
+  }
+
+  // Special handling for Clear! (The Doctor revive ability)
+  if (ability.effect === 'clear_revive') {
+    visualEffect = 'clear_revive'
+
+    if (!targetCard) {
+      return { success: false, message: 'No target selected!', effects: [] }
+    }
+
+    // Check if target is a dead ally
+    if (targetCard.hp > 0) {
+      return { success: false, message: 'Clear! can only revive fallen toys!', effects: [] }
+    }
+
+    const isAlly = allPlayerCards.find(c => c.id === targetCard.id)
+    if (!isAlly) {
+      return { success: false, message: 'Clear! can only revive allied toys!', effects: [] }
+    }
+
+    // Revive with 50% HP
+    const reviveHp = Math.floor(targetCard.maxHp * 0.5)
+    effects.push({ type: 'heal', targetId: targetCard.id, value: reviveHp })
+    const side = 'player'
+    heals.push({ cardId: targetCard.id, amount: reviveHp, side })
+
+    message = `${sourceCard.name} shouts "CLEAR!" and revives ${targetCard.name} with ${reviveHp} HP!`
+
+    return {
+      success: true,
+      message,
+      effects,
+      damages,
+      heals,
+      debuffs,
+      visualEffect
+    }
+  }
+
   targets.forEach(target => {
     if (ability.damage) {
       let damage = ability.damage
@@ -296,7 +535,16 @@ export function executeAbility(
     }
 
     if (ability.heal) {
-      const healAmount = Math.min(ability.heal, target.maxHp - target.hp)
+      let healAmount = Math.min(ability.heal, target.maxHp - target.hp)
+
+      // Apply heal reduction if target has the debuff
+      const healReductionDebuff = target.debuffs.find(d => d.type === 'heal_reduction')
+      if (healReductionDebuff && healReductionDebuff.healingReduction) {
+        const originalHeal = healAmount
+        healAmount = Math.floor(healAmount * (1 - healReductionDebuff.healingReduction))
+        message += ` ${target.name}'s cursed strings reduce healing from ${originalHeal} to ${healAmount}!`
+      }
+
       effects.push({ type: 'heal', targetId: target.id, value: healAmount })
 
       const side = allPlayerCards.find(c => c.id === target.id) ? 'player' : 'opponent'

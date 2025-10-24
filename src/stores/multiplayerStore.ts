@@ -417,6 +417,23 @@ const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
     gameStore.setCurrentTurn(isMyTurn ? 'player' : 'opponent')
     gameStore.setPhase(isMyTurn ? 'player_turn' : 'opponent_turn')
 
+    // Sync mana from server
+    if (gameState.player1Mana !== undefined && gameState.player2Mana !== undefined) {
+      const myMana = playerRole === 'player1' ? gameState.player1Mana : gameState.player2Mana
+      const opponentMana = playerRole === 'player1' ? gameState.player2Mana : gameState.player1Mana
+
+      // Directly update mana in the store
+      const state = gameStore as any
+      state.playerMana = myMana
+      state.opponentMana = opponentMana
+    }
+
+    // Sync turn number
+    if (gameState.turnNumber !== undefined) {
+      const state = gameStore as any
+      state.turnNumber = gameState.turnNumber
+    }
+
     // Check win condition
     gameStore.checkWinCondition()
   },

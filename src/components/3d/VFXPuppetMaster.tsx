@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { materialPool } from '@/utils/vfxPool'
 
 interface VFXPuppetMasterProps {
   enemyPosition: [number, number, number]  // Enemy being drained
@@ -36,9 +37,10 @@ export function VFXPuppetMaster({
     return new THREE.TubeGeometry(curve, 50, 0.1, 8, false)
   }, [curve])
 
-  // Custom shader material for green energy effect
+  // Use pre-compiled shader material from pool
   const material = useMemo(() => {
-    return new THREE.ShaderMaterial({
+    const pooledMaterial = materialPool.getEnergyBeamShader('#00ff44')
+    return pooledMaterial || new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
         progress: { value: 0 },
@@ -54,14 +56,10 @@ export function VFXPuppetMaster({
         void main() {
           vUv = uv;
           vProgress = uv.x;
-
           vec3 pos = position;
-
-          // Wave effect along the beam
           float wave = sin(uv.x * 10.0 - time * 5.0) * 0.06;
           pos.y += wave;
           pos.x += cos(uv.x * 8.0 - time * 4.0) * 0.04;
-
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }
       `,
@@ -74,24 +72,13 @@ export function VFXPuppetMaster({
         varying float vProgress;
 
         void main() {
-          // Only show the part that has animated
-          if (vProgress > progress) {
-            discard;
-          }
-
-          // Energy flow effect
+          if (vProgress > progress) discard;
           float flow = sin(vProgress * 20.0 - time * 10.0) * 0.3 + 0.7;
-
-          // Glow at edges
           float glow = 1.0 - abs(vUv.y - 0.5) * 2.0;
           glow = pow(glow, 2.0);
-
-          // Fade at ends
           float endFade = smoothstep(0.0, 0.1, vProgress) * smoothstep(1.0, 0.9, vProgress);
-
-          vec3 finalColor = color + vec3(0.3) * flow; // Brighter core
+          vec3 finalColor = color + vec3(0.3) * flow;
           float finalAlpha = opacity * glow * endFade * (0.8 + flow * 0.2);
-
           gl_FragColor = vec4(finalColor, finalAlpha);
         }
       `,
